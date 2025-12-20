@@ -38,7 +38,7 @@
 
     <!-- Departments Table -->
    <div class="my-4">
-     <a-table
+      <a-table
       :columns="columns"
       :data-source="departments"
       :row-key="record => record.id"
@@ -71,6 +71,7 @@
         </a-space>
       </template>
     </a-table>
+
    </div>
   </div>
 </template>
@@ -85,22 +86,29 @@ const departments = ref<any[]>([])
 const error = ref('')
 const loading = ref(false)
 
-// Table columns without 'customRender' strings
+// Table columns with numbering
 const columns = [
+  { title: '#', dataIndex: 'index', key: 'index', width: 50 },
   { title: 'Department Name', dataIndex: 'name', key: 'name' },
   { title: 'Status', key: 'status' },
   { title: 'Actions', key: 'actions' },
 ]
 
-// Fetch departments
+
+
 const fetchDepartments = async () => {
   try {
     const res = await api.get('/departments')
-    departments.value = res.data.map((d: any) => ({ ...d, active: true })) // default active
+    departments.value = res.data.map((d: any, i: number) => ({
+      ...d,
+      active: true,
+      index: i + 1, // Add serial number here
+    }))
   } catch (err: any) {
     error.value = err.response?.data?.message || 'Failed to fetch departments'
   }
 }
+
 const createDepartment = async () => {
   console.log("Hello") // now this will show in console
   if (!departmentName.value.trim()) return
