@@ -1,0 +1,33 @@
+{
+  "name": "first",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@pinia/nuxt": "^0.11.3",
+    "@tailwindcss/vite": "^4.1.18",
+    "ant-design-vue": "^4.2.6",
+    "axios": "^1.13.2",
+    "nuxt": "^4.2.2",
+    "pinia": "^3.0.4",
+    "pinia-plugin-persistedstate": "^4.7.1",
+    "tailwindcss": "^4.1.18",
+    "vue": "^3.5.25",
+    "vue-router": "^4.6.4"
+  },
+  "devDependencies": {
+    "@nuxt/eslint-config": "^1.12.1",
+    "@typescript-eslint/parser": "^8.50.0",
+    "@vue/eslint-config-typescript": "^14.6.0",
+    "eslint": "^9.39.2",
+    "eslint-plugin-vue": "^10.6.2",
+    "vue-eslint-parser": "^10.2.0"
+  }
+}
