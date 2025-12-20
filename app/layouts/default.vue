@@ -27,7 +27,7 @@
         <SidebarLink to="/users" icon="👥" label="Users" :collapsed="collapsed" />
         <SidebarLink to="/transactions" icon="💳" label="Transactions" :collapsed="collapsed" />
         <SidebarLink to="/text" icon="⚙️" label="Test" :collapsed="collapsed" />
-        <SidebarLink to="/settings" icon="⚙️" label="Settings" :collapsed="collapsed" />
+        <SidebarLink to="/departments" icon="⚙️" label="Departments" :collapsed="collapsed" />
         <SidebarLink to="/settings" icon="⚙️" label="Settings" :collapsed="collapsed" />
         <SidebarLink to="/settings" icon="⚙️" label="Settings" :collapsed="collapsed" />
         <SidebarLink to="/settings" icon="⚙️" label="Settings" :collapsed="collapsed" />

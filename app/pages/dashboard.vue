@@ -31,9 +31,7 @@
 </template>
 
 <script setup>
-definePageMeta({
-  middleware: 'auth',
-})
+
 
 const auth = useAuthStore()
 </script>
