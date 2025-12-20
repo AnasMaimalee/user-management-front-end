@@ -1,0 +1,17 @@
+:root {
+  /* Use AntD token */
+  --brand-primary: var(--ant-color-primary);
+}
+
+/* Custom button */
+.btn-primary {
+  background-color: var(--brand-primary);
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+}
+
+/* Text color */
+.text-primary {
+  color: var(--brand-primary);
+}
