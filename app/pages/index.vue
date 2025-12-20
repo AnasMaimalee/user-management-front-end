@@ -1,100 +1,124 @@
-<template>
-  
-    <div class="min-h-screen flex justify-center items-center bg-gray-50">
-      <div class="w-full md:w-1/3 p-6 rounded-xl bg-white shadow-lg">
-        
-        <!-- Title -->
-        <div class="text-center mb-6">
-          <h3 class="text-xl font-semibold text-slate-600">Register Your Account</h3>
-        </div>
+<script setup lang="ts">
+import { ref, reactive } from 'vue'
+import { useAuthStore } from '~/stores/auth'
+import { notification } from 'ant-design-vue'
 
-        <!-- Registration Form -->
-        <form @submit.prevent="register" class="space-y-4">
-          <input
-            v-model="form.name"
-            type="text"
-            placeholder="Enter your name"
-            class="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-slate-500"
-            required
-          />
-
-          <input
-            v-model="form.email"
-            type="email"
-            placeholder="Enter your email"
-            class="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-slate-500"
-            required
-          />
-
-          <input
-            v-model="form.password"
-            type="password"
-            placeholder="Enter your password"
-            class="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-slate-500"
-            required
-          />
-
-          <input
-            v-model="form.password_confirmation"
-            type="password"
-            placeholder="Confirm password"
-            class="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-slate-500"
-            required
-          />
-
-          <!-- Register Button -->
-          <div class="flex mt-4">
-            <button
-              type="submit"
-              class="w-full bg-slate-600 text-white py-2 px-4 rounded hover:bg-slate-700 hover:shadow-lg transition"
-            >
-              Register
-            </button>
-          </div>
-        </form>
-
-        <!-- Link to Login -->
-        <div class="text-center mt-4">
-          <p class="text-gray-600">
-            Already have an account?
-            <NuxtLink to="/login" class="text-slate-600 hover:underline">Login here</NuxtLink>
-          </p>
-        </div>
-
-      </div>
-    </div>
-  
-</template>
-
-<script setup>
-import { ref } from 'vue'
-import axios from 'axios'
-import { useRouter } from 'vue-router'
 definePageMeta({
   layout: 'auth',
 })
-const router = useRouter()
 
-const form = ref({
+const loading = ref(false)
+const auth = useAuthStore()
+
+// AntDV form model
+const formState = reactive({
   name: '',
   email: '',
   password: '',
-  password_confirmation: ''
+  password_confirmation: '',
 })
 
 const register = async () => {
+  loading.value = true
   try {
-    const response = await axios.post('http://127.0.0.1:8000/api/register', form.value)
-    console.log('Registration successful:', response.data)
+    await auth.register(formState)
 
-    // Save token to localStorage
-    localStorage.setItem('token', response.data.access_token)
+    notification.success({
+      message: 'Registration Successful',
+      description: 'Welcome! Your account has been created.',
+      placement: 'topRight',
+      duration: 2,
+    })
 
-    // Redirect to dashboard
-    router.push('/dashboard')
-  } catch (error) {
-    console.error('Registration error:', error.response?.data || error)
-    alert(error.response?.data?.message || 'Registration failed')
+    // redirect is usually handled in store,
+    // but keep here if needed
+    // await navigateTo('/dashboard')
+
+  } catch (err: any) {
+    notification.error({
+      message: 'Registration Failed',
+      description:
+        err.response?.data?.message || 'Unable to create account',
+      placement: 'topRight',
+      duration: 4,
+    })
+  } finally {
+    loading.value = false
   }
 }
 </script>
+
+<template>
+  <div class="min-h-screen flex justify-center items-center bg-gray-50">
+    <div class="w-full md:w-1/3 p-6 rounded-xl bg-white shadow-lg">
+
+      <!-- Title -->
+      <div class="text-center mb-6">
+        <h3 class="text-xl font-semibold text-slate-600">
+          Register Your Account
+        </h3>
+      </div>
+
+      <!-- Registration Form -->
+      <a-form
+        :model="formState"
+        @finish="register"
+        layout="vertical"
+        class="space-y-4"
+      >
+
+        <a-form-item name="name">
+          <a-input
+            v-model:value="formState.name"
+            placeholder="Enter your name"
+          />
+        </a-form-item>
+
+        <a-form-item name="email">
+          <a-input
+            v-model:value="formState.email"
+            type="email"
+            placeholder="Enter your email"
+          />
+        </a-form-item>
+
+        <a-form-item name="password">
+          <a-input-password
+            v-model:value="formState.password"
+            placeholder="Enter your password"
+          />
+        </a-form-item>
+
+        <a-form-item name="password_confirmation">
+          <a-input-password
+            v-model:value="formState.password_confirmation"
+            placeholder="Confirm password"
+          />
+        </a-form-item>
+
+        <a-form-item>
+          <a-button
+            type="primary"
+            html-type="submit"
+            :loading="loading"
+            class="w-full"
+          >
+            Register
+          </a-button>
+        </a-form-item>
+
+      </a-form>
+
+      <!-- Link to Login -->
+      <div class="text-center mt-4">
+        <p>
+          Already have an account?
+          <NuxtLink to="/login" class="hover:underline">
+            Login here
+          </NuxtLink>
+        </p>
+      </div>
+
+    </div>
+  </div>
+</template>

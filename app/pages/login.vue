@@ -1,32 +1,50 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '~/stores/auth'  // <-- Import your store
+import { ref, reactive } from 'vue'
+import { useAuthStore } from '~/stores/auth'
+import { notification } from 'ant-design-vue'
 
-const email = ref('')
-const password = ref('')
-const error = ref('')
-const loading = ref(false)
-const router = useRouter()
 definePageMeta({
   layout: 'auth',
 })
-const auth = useAuthStore()  // <-- Initialize the store
 
+const loading = ref(false)
+const auth = useAuthStore()
+
+// ✅ AntDV form model
+const formState = reactive({
+  email: '',
+  password: '',
+})
 const login = async () => {
-  error.value = ''
   loading.value = true
   try {
-    // Use the store action for login
-    await auth.login({ email: email.value, password: password.value })
-    // Redirect is handled inside the store
+    await auth.login({
+      email: formState.email,
+      password: formState.password,
+    })
+
+    notification.success({
+      message: 'Login Successful',
+      description: 'Welcome back!',
+      placement: 'topRight',
+      duration: 2,
+    })
+
   } catch (err: any) {
-    error.value = err.response?.data?.message || 'Login failed'
+    notification.error({
+      message: 'Login Failed',
+      description:
+        err.response?.data?.message || 'Invalid email or password',
+      placement: 'topRight',
+      duration: 4,
+    })
   } finally {
     loading.value = false
   }
 }
+
 </script>
+
 
 
 <template>
@@ -35,38 +53,48 @@ const login = async () => {
       
       <!-- Title -->
       <div class="text-center mb-6">
-        <h2 class="text-2xl font-bold text-slate-600">Login to Your Account</h2>
+        <h2 class="text-2xl font-bold text-primary">Login to Your Account</h2>
         <p class="text-gray-500 mt-1">Enter your credentials to access your dashboard</p>
       </div>
 
       <!-- Error Message -->
       <p v-if="error" class="text-red-500 mb-4 text-center font-medium">{{ error }}</p>
 
-      <!-- Login Form -->
-      <form @submit.prevent="login" class="space-y-4">
-        <input
-          v-model="email"
-          type="email"
-          placeholder="Enter your email"
-          class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition"
-        />
+     <a-form
+  :model="formState"
+  @finish="login"
+  layout="vertical"
+  class="space-y-4"
+>
 
-        <input
-          v-model="password"
-          type="password"
-          placeholder="Enter your password"
-          class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition"
-        />
+  <a-form-item name="email">
+    <a-input
+      v-model:value="formState.email"
+      type="email"
+      placeholder="Enter your email"
+    />
+  </a-form-item>
 
-        <button
-          type="submit"
-          :disabled="loading"
-          class="w-full bg-slate-600 text-white py-3 rounded-lg font-semibold hover:bg-slate-700 hover:shadow-lg transition disabled:opacity-50"
-        >
-          <span v-if="!loading">Login</span>
-          <span v-else>Logging in...</span>
-        </button>
-      </form>
+  <a-form-item name="password">
+    <a-input-password
+      v-model:value="formState.password"
+      placeholder="Enter your password"
+    />
+  </a-form-item>
+
+  <a-form-item>
+    <a-button
+      type="primary"
+      html-type="submit"
+      :loading="loading"
+      class="w-full"
+    >
+      Login
+    </a-button>
+  </a-form-item>
+
+</a-form>
+
 
       <!-- Divider -->
       <div class="flex items-center my-4">
