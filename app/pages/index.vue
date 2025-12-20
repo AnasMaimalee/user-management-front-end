@@ -5,7 +5,7 @@
         
         <!-- Title -->
         <div class="text-center mb-6">
-          <h3 class="text-xl font-semibold text-blue-600">Register Your Account</h3>
+          <h3 class="text-xl font-semibold text-slate-600">Register Your Account</h3>
         </div>
 
         <!-- Registration Form -->
@@ -14,7 +14,7 @@
             v-model="form.name"
             type="text"
             placeholder="Enter your name"
-            class="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-slate-500"
             required
           />
 
@@ -22,7 +22,7 @@
             v-model="form.email"
             type="email"
             placeholder="Enter your email"
-            class="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-slate-500"
             required
           />
 
@@ -30,7 +30,7 @@
             v-model="form.password"
             type="password"
             placeholder="Enter your password"
-            class="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-slate-500"
             required
           />
 
@@ -38,7 +38,7 @@
             v-model="form.password_confirmation"
             type="password"
             placeholder="Confirm password"
-            class="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-slate-500"
             required
           />
 
@@ -46,7 +46,7 @@
           <div class="flex mt-4">
             <button
               type="submit"
-              class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 hover:shadow-lg transition"
+              class="w-full bg-slate-600 text-white py-2 px-4 rounded hover:bg-slate-700 hover:shadow-lg transition"
             >
               Register
             </button>
@@ -57,7 +57,7 @@
         <div class="text-center mt-4">
           <p class="text-gray-600">
             Already have an account?
-            <NuxtLink to="/login" class="text-blue-600 hover:underline">Login here</NuxtLink>
+            <NuxtLink to="/login" class="text-slate-600 hover:underline">Login here</NuxtLink>
           </p>
         </div>
 

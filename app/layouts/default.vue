@@ -11,7 +11,7 @@
       <!-- Logo -->
       <div class="h-16 flex items-center justify-between px-4 border-b border-slate-800">
         <span v-if="!collapsed" class="font-semibold text-lg tracking-wide">
-          DaisyCorp
+          Maimalee
         </span>
         <button
           @click="collapsed = !collapsed"
@@ -26,14 +26,20 @@
         <SidebarLink to="/dashboard" icon="📊" label="Dashboard" :collapsed="collapsed" />
         <SidebarLink to="/users" icon="👥" label="Users" :collapsed="collapsed" />
         <SidebarLink to="/transactions" icon="💳" label="Transactions" :collapsed="collapsed" />
+        <SidebarLink to="/text" icon="⚙️" label="Test" :collapsed="collapsed" />
         <SidebarLink to="/settings" icon="⚙️" label="Settings" :collapsed="collapsed" />
+        <SidebarLink to="/settings" icon="⚙️" label="Settings" :collapsed="collapsed" />
+        <SidebarLink to="/settings" icon="⚙️" label="Settings" :collapsed="collapsed" />
+        <SidebarLink to="/settings" icon="⚙️" label="Settings" :collapsed="collapsed" />
+        <SidebarLink to="/settings" icon="⚙️" label="Settings" :collapsed="collapsed" />
+
       </nav>
 
       <!-- Logout -->
       <div class="p-3 border-t border-slate-800">
         <button
           @click="logout"
-          class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded text-sm transition"
+          class="w-full bg-slate-500 hover:bg-slate-600 text-white py-2 rounded text-sm transition"
         >
           <span v-if="!collapsed">Logout</span>
           <span v-else>⏻</span>
@@ -57,14 +63,14 @@
             class="px-3 py-1.5 rounded border border-slate-300 dark:border-slate-600
                    bg-white dark:bg-slate-700 text-sm focus:outline-none"
           />
-          <div class="w-9 h-9 rounded-full bg-indigo-500 text-white flex items-center justify-center font-medium">
-            A
+          <div class="px-3 py-1 bg-slate-500 border border-slate-200 rounded text-white flex items-center justify-center font-medium">
+            Welcome @ {{ auth.user?.name }}
           </div>
         </div>
       </header>
 
       <!-- Page -->
-      <main class="flex-1 p-6">
+      <main class="flex-1 p-6 bg-gray-100">
         <slot />
       </main>
 

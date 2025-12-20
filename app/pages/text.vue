@@ -1,5 +1,7 @@
 <template>
-  <div>Test</div>
+  <div class="min-h-screen flex flex-col">
+    Test
+  </div>
 </template>
 
 <script setup>

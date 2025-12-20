@@ -30,12 +30,12 @@ const login = async () => {
 
 
 <template>
-  <div class="min-h-screen flex justify-center items-center bg-gradient-to-r from-blue-50 to-indigo-50">
-    <div class="w-full md:w-1/3 p-6 rounded-xl shadow-xl bg-white border border-blue-200">
+  <div class="min-h-screen flex justify-center items-center bg-gradient-to-r from-slate-50 to-indigo-50">
+    <div class="w-full md:w-1/3 p-6 rounded-xl shadow-xl bg-white border border-slate-200">
       
       <!-- Title -->
       <div class="text-center mb-6">
-        <h2 class="text-2xl font-bold text-blue-600">Login to Your Account</h2>
+        <h2 class="text-2xl font-bold text-slate-600">Login to Your Account</h2>
         <p class="text-gray-500 mt-1">Enter your credentials to access your dashboard</p>
       </div>
 
@@ -48,20 +48,20 @@ const login = async () => {
           v-model="email"
           type="email"
           placeholder="Enter your email"
-          class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
+          class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition"
         />
 
         <input
           v-model="password"
           type="password"
           placeholder="Enter your password"
-          class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
+          class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent transition"
         />
 
         <button
           type="submit"
           :disabled="loading"
-          class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 hover:shadow-lg transition disabled:opacity-50"
+          class="w-full bg-slate-600 text-white py-3 rounded-lg font-semibold hover:bg-slate-700 hover:shadow-lg transition disabled:opacity-50"
         >
           <span v-if="!loading">Login</span>
           <span v-else>Logging in...</span>
@@ -79,7 +79,7 @@ const login = async () => {
       <div class="text-center mt-2">
         <p class="text-gray-600">
           Don't have an account?
-          <router-link to="/" class="text-blue-600 font-medium hover:underline">Register here</router-link>
+          <router-link to="/" class="text-slate-600 font-medium hover:underline">Register here</router-link>
         </p>
       </div>
 
