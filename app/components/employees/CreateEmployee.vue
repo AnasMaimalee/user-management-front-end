@@ -102,6 +102,7 @@ const branchId = ref<string | null>(null)
 // Data arrays
 const departments = ref<Array<{ id: string; name: string }>>([])
 const ranks = ref<Array<{ id: string; name: string }>>([])
+
 const branches = ref<Array<{ id: string; name: string }>>([])
 
 const loadingDepartments = ref(false)
@@ -130,14 +131,35 @@ const fetchRanks = async () => {
   loadingRanks.value = true
   try {
     const res = await api.get('/ranks')
-    ranks.value = res.data || []
-  } catch (err) {
+    
+    console.log('Ranks API response:', res.data)
+
+    // Safely extract the array of ranks
+    let rankList = []
+
+    if (Array.isArray(res.data)) {
+      // Case: direct array or [[...]]
+      rankList = res.data.flat()
+    } else if (res.data?.data) {
+      // Case: { data: [...] } or { data: [[...]] }
+      rankList = Array.isArray(res.data.data) ? res.data.data.flat() : []
+    } else {
+      rankList = []
+    }
+
+    ranks.value = rankList
+
+    console.log('Processed ranks:', ranks.value) // Should now show flat array
+
+  } catch (err: any) {
+    console.error('Rank fetch error:', err)
     ranks.value = []
     notification.error({ message: 'Failed to fetch ranks' })
   } finally {
     loadingRanks.value = false
   }
 }
+
 
 
 const fetchBranches = async () => {
@@ -159,29 +181,65 @@ onMounted(() => {
 })
 
 const handleClose = () => emit('close')
-
 const submit = async () => {
-  if (!employeeCode.value.trim() || !firstName.value.trim() || !lastName.value.trim() || !email.value.trim()) {
-    notification.error({ message: 'All fields except department, rank, and branch are required' })
+  // 1. Trim all inputs first to avoid whitespace issues
+  const trimmedEmployeeCode = employeeCode.value.trim()
+  const trimmedFirstName = firstName.value.trim()
+  const trimmedLastName = lastName.value.trim()
+  const trimmedEmail = email.value.trim()
+
+  // 2. Required fields validation
+  if (
+    !trimmedEmployeeCode ||
+    !trimmedFirstName ||
+    !trimmedLastName ||
+    !trimmedEmail
+  ) {
+    notification.error({
+      message: 'Required Fields Missing',
+      description: 'Employee Code, First Name, Last Name, and Email are all required.',
+    })
     return
   }
 
+  // 3. Email format validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(trimmedEmail)) {
+    notification.error({
+      message: 'Invalid Email',
+      description: 'Please enter a valid email address (e.g., user@example.com).',
+    })
+    return
+  }
+
+  // 4. Optional: You can add more specific rules here later
+  // e.g., employee code format: if ( !/^EMP-\d{3,}$/.test(trimmedEmployeeCode) ) { ... }
+
+  // 5. Prepare payload
+  const payload = {
+    employee_code: trimmedEmployeeCode,
+    first_name: trimmedFirstName,
+    last_name: trimmedLastName,
+    email: trimmedEmail,
+    department_id: departmentId.value || null,  // null if not selected
+    rank_id: rankId.value || null,
+    branch_id: branchId.value || null,
+  }
+
+  // 6. Submit to backend
   try {
-    await api.post('/employees', {
-      employee_code: employeeCode.value,
-      first_name: firstName.value,
-      last_name: lastName.value,
-      email: email.value,
-      department_id: departmentId.value,
-      rank_id: rankId.value,
-      branch_id: branchId.value,
+    await api.post('/employees', payload)
+
+    notification.success({
+      message: 'Success',
+      description: 'Employee created successfully!',
     })
 
-    notification.success({ message: 'Employee created' })
+    // Emit events to parent
     emit('created')
     emit('close')
 
-    // Reset form
+    // Reset form fields
     employeeCode.value = ''
     firstName.value = ''
     lastName.value = ''
@@ -190,10 +248,31 @@ const submit = async () => {
     rankId.value = null
     branchId.value = null
   } catch (err: any) {
-    notification.error({
-      message: 'Error',
-      description: err.response?.data?.message || 'Failed to create employee',
-    })
+    console.error('Employee creation error:', err)
+
+    // Show user-friendly error
+    const serverMessage = err.response?.data?.message
+    const errors = err.response?.data?.errors
+
+    if (errors) {
+      // If Laravel returns validation errors (object of field -> messages)
+      const errorMessages = Object.values(errors).flat().join('<br>')
+      notification.error({
+        message: 'Validation Error',
+        description: errorMessages,
+        duration: 6,
+      })
+    } else if (serverMessage) {
+      notification.error({
+        message: 'Creation Failed',
+        description: serverMessage,
+      })
+    } else {
+      notification.error({
+        message: 'Error',
+        description: 'Failed to create employee. Please try again.',
+      })
+    }
   }
 }
 </script>
