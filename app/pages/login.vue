@@ -10,11 +10,11 @@ definePageMeta({
 const loading = ref(false)
 const auth = useAuthStore()
 
-// ✅ AntDV form model
 const formState = reactive({
   email: '',
   password: '',
 })
+
 const login = async () => {
   loading.value = true
   try {
@@ -29,7 +29,6 @@ const login = async () => {
       placement: 'topRight',
       duration: 2,
     })
-
   } catch (err: any) {
     notification.error({
       message: 'Login Failed',
@@ -42,59 +41,72 @@ const login = async () => {
     loading.value = false
   }
 }
-
 </script>
 
-
-
 <template>
-  <div class="min-h-screen flex justify-center items-center bg-gradient-to-r from-slate-50 to-indigo-50">
-    <div class="w-full md:w-1/3 p-6 rounded-xl shadow-xl bg-white border border-slate-200">
-      
+  <!-- Loader Overlay -->
+  <div
+    v-if="loading"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-white/70 backdrop-blur-sm"
+  >
+    <a-spin size="large" tip="Signing you in..." />
+  </div>
+
+  <!-- Page -->
+  <div
+    class="min-h-screen flex justify-center items-center
+           bg-gradient-to-r from-slate-50 to-indigo-50"
+  >
+    <div
+      class="w-full md:w-1/3 p-6 rounded-xl shadow-xl
+             bg-white border border-slate-200"
+    >
       <!-- Title -->
       <div class="text-center mb-6">
-        <h2 class="text-2xl font-bold text-primary">Login to Your Account</h2>
-        <p class="text-gray-500 mt-1">Enter your credentials to access your dashboard</p>
+        <h2 class="text-2xl font-bold text-primary">
+          Login to Your Account
+        </h2>
+        <p class="text-gray-500 mt-1">
+          Enter your credentials to access your dashboard
+        </p>
       </div>
 
-      <!-- Error Message -->
-      <p v-if="error" class="text-red-500 mb-4 text-center font-medium">{{ error }}</p>
+      <!-- Form -->
+      <a-form
+        :model="formState"
+        @finish="login"
+        layout="vertical"
+        class="space-y-4"
+      >
+        <a-form-item name="email">
+          <a-input
+            v-model:value="formState.email"
+            type="email"
+            placeholder="Enter your email"
+            size="large"
+          />
+        </a-form-item>
 
-     <a-form
-  :model="formState"
-  @finish="login"
-  layout="vertical"
-  class="space-y-4"
->
+        <a-form-item name="password">
+          <a-input-password
+            v-model:value="formState.password"
+            placeholder="Enter your password"
+            size="large"
+          />
+        </a-form-item>
 
-  <a-form-item name="email">
-    <a-input
-      v-model:value="formState.email"
-      type="email"
-      placeholder="Enter your email"
-    />
-  </a-form-item>
-
-  <a-form-item name="password">
-    <a-input-password
-      v-model:value="formState.password"
-      placeholder="Enter your password"
-    />
-  </a-form-item>
-
-  <a-form-item>
-    <a-button
-      type="primary"
-      html-type="submit"
-      :loading="loading"
-      class="w-full"
-    >
-      Login
-    </a-button>
-  </a-form-item>
-
-</a-form>
-
+        <a-form-item>
+          <a-button
+            type="primary"
+            html-type="submit"
+            :loading="loading"
+            class="w-full"
+            size="large"
+          >
+            Login
+          </a-button>
+        </a-form-item>
+      </a-form>
 
       <!-- Divider -->
       <div class="flex items-center my-4">
@@ -103,14 +115,18 @@ const login = async () => {
         <hr class="flex-1 border-gray-300" />
       </div>
 
-      <!-- Register Link -->
+      <!-- Register -->
       <div class="text-center mt-2">
         <p class="text-gray-600">
           Don't have an account?
-          <router-link to="/" class="text-slate-600 font-medium hover:underline">Register here</router-link>
+          <router-link
+            to="/"
+            class="text-primary font-medium hover:underline"
+          >
+            Register here
+          </router-link>
         </p>
       </div>
-
     </div>
   </div>
 </template>
