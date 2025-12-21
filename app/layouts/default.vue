@@ -113,6 +113,14 @@ import {
   AppstoreOutlined
 } from '@ant-design/icons-vue'
 
+const defaultMenus = [
+  {
+    title: 'Dashboard',
+    route: '/dashboard',
+    icon: 'HomeOutlined',
+  },
+]
+
 const auth = useAuthStore()
 const router = useRouter()
 
@@ -133,8 +141,16 @@ const icons: Record<string, any> = {
 }
 
 const DefaultIcon = AppstoreOutlined
+const menus = computed(() => {
+  const backendMenus = auth.user?.menus || []
 
-const menus = computed(() => auth.user?.menus || [])
+  const filteredBackendMenus = backendMenus.filter(
+    (menu) => menu.route !== '/dashboard'
+  )
+
+  return [...defaultMenus, ...filteredBackendMenus]
+})
+
 
 const navigate = (route: string) => {
   router.push(route)
