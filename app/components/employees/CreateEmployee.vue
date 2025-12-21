@@ -41,7 +41,7 @@
         </a-select>
       </a-form-item>
 
-      <!-- Rank -->
+     <!-- Rank -->
       <a-form-item label="Rank">
         <a-select
           v-model:value="rankId"
@@ -58,6 +58,7 @@
           </a-select-option>
         </a-select>
       </a-form-item>
+
 
       <!-- Branch -->
       <a-form-item label="Branch">
@@ -125,18 +126,19 @@ const fetchDepartments = async () => {
   }
 }
 
-// Placeholder fetch functions for ranks and branches
 const fetchRanks = async () => {
   loadingRanks.value = true
   try {
-    const res = await api.get('/ranks') // update endpoint later
+    const res = await api.get('/ranks')
     ranks.value = res.data || []
-  } catch (err: any) {
+  } catch (err) {
     ranks.value = []
+    notification.error({ message: 'Failed to fetch ranks' })
   } finally {
     loadingRanks.value = false
   }
 }
+
 
 const fetchBranches = async () => {
   loadingBranches.value = true
