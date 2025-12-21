@@ -1,32 +1,13 @@
 <template>
   <div class="p-6 bg-slate-100 min-h-screen">
-    <h1 class="text-2xl font-bold mb-4 text-slate-800">Departments</h1>
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-2xl font-bold text-slate-800">Departments</h1>
 
-    <!-- Create Department Form -->
-    <a-form
-      layout="inline"
-      @finish="createDepartment"
-      class="mb-6"
-    >
-      <div class="flex gap-2 mb-6">
-        <a-input
-          v-model:value="departmentName"
-          placeholder="Enter department name"
-          class="flex-1"
-        />
-        <a-button
-          type="primary"
-          :loading="loading"
-          @click="createDepartment"
-        >
-          {{ loading ? 'Creating...' : 'Create' }}
-        </a-button>
-      </div>
+      <a-button type="primary" @click="showCreate = true">
+        Create Department
+      </a-button>
+    </div>
 
-
-    </a-form>
-
-    <!-- Error Message -->
     <a-alert
       v-if="error"
       type="error"
@@ -36,116 +17,131 @@
       class="mb-4"
     />
 
-    <!-- Departments Table -->
-   <div class="my-4">
-      <a-table
+    <a-table
       :columns="columns"
       :data-source="departments"
-      :row-key="record => record.id"
+      row-key="id"
       bordered
-      class="bg-white shadow rounded"
+      class="bg-white rounded shadow"
     >
-      <template #status="{ record }">
-        <a-tag :color="record.active ? 'green' : 'red'">
-          {{ record.active ? 'Active' : 'Inactive' }}
-        </a-tag>
-      </template>
+      <template #bodyCell="{ column, record, index }">
+        <!-- Index -->
+        <template v-if="column.key === 'index'">
+          {{ index + 1 }}
+        </template>
 
-      <template #actions="{ record }">
-        <a-space>
-          <a-button
-            type="primary"
-            size="small"
-            @click="toggleStatus(record)"
-          >
-            {{ record.active ? 'Set Inactive' : 'Set Active' }}
-          </a-button>
-          <a-button
-            type="default"
-            danger
-            size="small"
-            @click="deleteDepartment(record)"
-          >
-            Delete
-          </a-button>
-        </a-space>
+        <!-- Status -->
+        <template v-else-if="column.key === 'status'">
+          <a-tag :color="record.status === 'active' ? 'green' : 'red'">
+            {{ record.status }}
+          </a-tag>
+        </template>
+
+        <!-- Actions -->
+        <template v-else-if="column.key === 'actions'">
+          <a-dropdown trigger="click">
+            <a-button type="text">
+              <EllipsisOutlined class="text-lg" />
+            </a-button>
+
+            <template #overlay>
+              <a-menu>
+                <a-menu-item @click="openUpdate(record)">
+                  Update
+                </a-menu-item>
+
+                <a-menu-item @click="toggleStatus(record)">
+                  {{ record.status === 'active' ? 'Deactivate' : 'Activate' }}
+                </a-menu-item>
+
+                <a-menu-divider />
+
+                <a-menu-item danger @click="confirmDelete(record)">
+                  Delete
+                </a-menu-item>
+              </a-menu>
+            </template>
+          </a-dropdown>
+        </template>
       </template>
     </a-table>
 
-   </div>
+    <!-- Create -->
+    <CreateDepartment
+      :open="showCreate"
+      @close="showCreate = false"
+      @created="fetchDepartments"
+    />
+
+    <!-- Update -->
+    <UpdateDepartment
+      :open="showUpdate"
+      :department="selectedDepartment"
+      @close="showUpdate = false"
+      @updated="fetchDepartments"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import api from '~/utils/api'
-import { notification, message } from 'ant-design-vue'
+import { message, Modal } from 'ant-design-vue'
+import { EllipsisOutlined } from '@ant-design/icons-vue'
 
-const departmentName = ref('')
+import CreateDepartment from '~/components/departments/CreateDepartment.vue'
+import UpdateDepartment from '~/components/departments/UpdateDepartment.vue'
+
 const departments = ref<any[]>([])
 const error = ref('')
-const loading = ref(false)
+const showCreate = ref(false)
+const showUpdate = ref(false)
+const selectedDepartment = ref<any>(null)
 
-// Table columns with numbering
 const columns = [
-  { title: '#', dataIndex: 'index', key: 'index', width: 50 },
-  { title: 'Department Name', dataIndex: 'name', key: 'name' },
+  { title: '#', key: 'index', width: 60 },
+  { title: 'Name', dataIndex: 'name' },
+  { title: 'Description', dataIndex: 'description' },
   { title: 'Status', key: 'status' },
-  { title: 'Actions', key: 'actions' },
+  { title: 'Actions', key: 'actions', width: 80 },
 ]
-
-
 
 const fetchDepartments = async () => {
   try {
     const res = await api.get('/departments')
-    departments.value = res.data.map((d: any, i: number) => ({
-      ...d,
-      active: true,
-      index: i + 1, // Add serial number here
-    }))
+    departments.value = res.data
   } catch (err: any) {
-    error.value = err.response?.data?.message || 'Failed to fetch departments'
+    error.value = err.response?.data?.message || 'Failed to load departments'
   }
 }
 
-const createDepartment = async () => {
-  console.log("Hello") // now this will show in console
-  if (!departmentName.value.trim()) return
-  loading.value = true
-  try {
-    const res = await api.post('/departments', { name: departmentName.value })
-    notification.success({ message: 'Created', description: `${res.data.name} created successfully` })
-    departmentName.value = ''
-    await fetchDepartments()
-  } catch (err: any) {
-    notification.error({ message: 'Error', description: err.response?.data?.message || 'Failed to create' })
-  } finally {
-    loading.value = false
-  }
+const confirmDelete = (record: any) => {
+  Modal.confirm({
+    title: 'Delete Department',
+    content: `Are you sure you want to delete "${record.name}"?`,
+    okType: 'danger',
+    onOk: async () => {
+      await api.delete(`/departments/${record.id}`)
+      message.success('Department deleted')
+      fetchDepartments()
+    },
+  })
 }
 
-
-// Delete department
-const deleteDepartment = async (record: any) => {
-  try {
-    await api.delete(`/departments/${record.id}`)
-    message.success(`${record.name} deleted successfully`)
-    await fetchDepartments()
-  } catch (err: any) {
-    message.error(err.response?.data?.message || 'Failed to delete department')
-  }
-}
-
-// Toggle active/inactive
 const toggleStatus = async (record: any) => {
   try {
-    record.active = !record.active
-    message.success(`${record.name} is now ${record.active ? 'Active' : 'Inactive'}`)
+    await api.patch(`/departments/${record.id}/status`)
+    message.success('Status updated')
+    fetchDepartments()
   } catch {
-    message.error('Failed to toggle status')
+    message.error('Failed to update status')
   }
 }
 
-onMounted(() => fetchDepartments())
+const openUpdate = (record: any) => {
+  selectedDepartment.value = record
+  showUpdate.value = true
+}
+
+onMounted(fetchDepartments)
 </script>
