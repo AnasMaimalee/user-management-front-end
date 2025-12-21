@@ -1,10 +1,13 @@
-// ~/stores/auth.ts
 import { defineStore } from 'pinia'
+import api from '~/utils/api'
 
 interface User {
-  id: number
+  id: string
   name: string
   email: string
+  roles?: string[]
+  permissions?: string[]
+  menus?: any[]
 }
 
 export const useAuthStore = defineStore('auth', {
@@ -19,14 +22,32 @@ export const useAuthStore = defineStore('auth', {
   },
 
   actions: {
+    async fetchUser() {
+      try {
+        const res = await api.get('/me')
+
+        this.user = {
+          ...res.data.user,
+          roles: res.data.roles,
+          permissions: res.data.permissions,
+          menus: res.data.menus,
+        }
+      } catch (err) {
+        console.error('Auth expired')
+        this.logout()
+      }
+    },
+
     async login(payload: { email: string; password: string }) {
-      const { $api } = useNuxtApp()
       this.loading = true
       try {
-        const res = await $api.post('/login', payload)
+        const res = await api.post('/login', payload)
 
+        // IMPORTANT: token first
         this.token = res.data.access_token
-        this.user = res.data.user
+
+        // then fetch user (token now exists)
+        await this.fetchUser()
 
         await navigateTo('/dashboard')
       } finally {
@@ -34,21 +55,18 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    // ✅ ADD THIS
     async register(payload: {
       name: string
       email: string
       password: string
       password_confirmation: string
     }) {
-      const { $api } = useNuxtApp()
       this.loading = true
       try {
-        const res = await $api.post('/register', payload)
+        const res = await api.post('/register', payload)
 
-        // Auto-login after registration
         this.token = res.data.access_token
-        this.user = res.data.user
+        await this.fetchUser()
 
         await navigateTo('/dashboard')
       } finally {
@@ -57,8 +75,8 @@ export const useAuthStore = defineStore('auth', {
     },
 
     logout() {
-      this.token = null
       this.user = null
+      this.token = null
       navigateTo('/login')
     },
   },

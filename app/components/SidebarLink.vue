@@ -1,20 +1,26 @@
 <template>
-  <NuxtLink
-    :to="to"
-    class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium
-           text-white/80 hover:text-white
-           hover:bg-blue-500 dark:hover:bg-slate-800 transition"
-  >
-    <span class="text-lg">{{ icon }}</span>
+  <a-menu-item :key="to" @click="navigate">
+    <template #icon>
+      <component :is="icon" />
+    </template>
+
     <span v-if="!collapsed">{{ label }}</span>
-  </NuxtLink>
+  </a-menu-item>
 </template>
 
 <script setup lang="ts">
-defineProps<{
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+const props = defineProps<{
   to: string
-  icon: string
+  icon: any
   label: string
   collapsed: boolean
 }>()
+
+const navigate = () => {
+  router.push(props.to)
+}
 </script>

@@ -1,49 +1,74 @@
 <template>
-  <div class="min-h-screen flex bg-slate-100 dark:bg-slate-900">
+  <div class="min-h-screen flex  ">
 
     <!-- Sidebar -->
     <aside
       :class="[
-        'h-screen bg-slate-900 text-slate-200 transition-all duration-300 flex flex-col',
+        'h-screen  text-slate-200 transition-all duration-300',
         collapsed ? 'w-20' : 'w-64'
       ]"
     >
       <!-- Logo -->
-      <div class="h-16 flex items-center justify-between px-4 border-b border-slate-800">
-        <span v-if="!collapsed" class="font-semibold text-lg tracking-wide">
+      <div class="h-16 flex items-center justify-between px-4 border-b">
+        <span v-if="!collapsed" class="font-semibold text-lg text-blue-500 tracking-wide">
           Maimalee
         </span>
-        <button
+        <a-button
           @click="collapsed = !collapsed"
-          class="text-slate-400 hover:text-white"
+          class=""
         >
           ☰
-        </button>
+        </a-button>
       </div>
+      <div class="mt-6 flex items-center gap-3">
+        <!-- Avatar Circle -->
+        <!-- <div
+          class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600
+                flex items-center justify-center text-white font-semibold uppercase shadow"
+        >
+          {{ firstName.charAt(0) }}
+        </div>
 
-      <!-- Nav -->
-      <nav class="flex-1 px-2 py-4 space-y-1">
-        <SidebarLink to="/dashboard" icon="📊" label="Dashboard" :collapsed="collapsed" />
-        <SidebarLink to="/users" icon="👥" label="Users" :collapsed="collapsed" />
-        <SidebarLink to="/transactions" icon="💳" label="Transactions" :collapsed="collapsed" />
-        <SidebarLink to="/text" icon="⚙️" label="Test" :collapsed="collapsed" />
-        <SidebarLink to="/departments" icon="⚙️" label="Departments" :collapsed="collapsed" />
-        <SidebarLink to="/settings" icon="⚙️" label="Settings" :collapsed="collapsed" />
-        <SidebarLink to="/settings" icon="⚙️" label="Settings" :collapsed="collapsed" />
-        <SidebarLink to="/settings" icon="⚙️" label="Settings" :collapsed="collapsed" />
-        <SidebarLink to="/settings" icon="⚙️" label="Settings" :collapsed="collapsed" />
+        <div class="leading-tight">
+          <p class="text-xs uppercase tracking-wide text-slate-400">
+            Welcome back
+          </p>
+          <p class="text-lg font-semibold text-blue-500">
+            {{ firstName }}
+          </p>
+        </div>-->
+      </div> 
 
-      </nav>
+      <!-- Menu -->
+      <a-menu
+        theme="light"
+        mode="inline"
+        :inline-collapsed="collapsed"
+        class="h-full border-r-0 mt-5"
+      >
+        <a-menu-item
+          v-for="menu in menus"
+          :key="menu.route"
+          @click="navigate(menu.route)"
+        >
+          <component
+            :is="icons[menu.icon] || DefaultIcon"
+            class="mr-2"
+          />
+          <span>{{ menu.title }}</span>
+        </a-menu-item>
+      </a-menu>
 
       <!-- Logout -->
-      <div class="p-3 border-t border-slate-800">
-        <button
+      <div class="p-3 border-t ">
+        <a-button
+          danger
+          block
+          size="small"
           @click="logout"
-          class="w-full bg-slate-500 hover:bg-slate-600 text-white py-2 rounded text-sm transition"
         >
-          <span v-if="!collapsed">Logout</span>
-          <span v-else>⏻</span>
-        </button>
+          Logout
+        </a-button>
       </div>
     </aside>
 
@@ -51,21 +76,13 @@
     <div class="flex-1 flex flex-col">
 
       <!-- Topbar -->
-      <header class="h-16 bg-white dark:bg-slate-800 shadow-sm flex items-center justify-between px-6">
-        <h1 class="text-lg font-semibold text-slate-700 dark:text-slate-100">
+      <header class="h-16 bg-white shadow-sm flex items-center justify-between px-6">
+        <h1 class="text-lg text-primary font-semibold">
           Dashboard
         </h1>
 
         <div class="flex items-center gap-4">
-          <input
-            type="text"
-            placeholder="Search"
-            class="px-3 py-1.5 rounded border border-slate-300 dark:border-slate-600
-                   bg-white dark:bg-slate-700 text-sm focus:outline-none"
-          />
-          <div class="px-3 py-1 bg-slate-500 border border-slate-200 rounded text-white flex items-center justify-center font-medium">
-            Welcome @ {{ auth.user?.name }}
-          </div>
+          
         </div>
       </header>
 
@@ -84,13 +101,54 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '~/stores/auth'
-import SidebarLink from '~/components/SidebarLink.vue'
+
+// Ant Design Icons
+import {
+  HomeOutlined,
+  SettingOutlined,
+  UserOutlined,
+  AppstoreOutlined
+} from '@ant-design/icons-vue'
+
+const auth = useAuthStore()
+const router = useRouter()
+
+const firstName = computed(() => {
+  if (!auth.user?.name) return ''
+  return auth.user.name.split(' ')[0]
+})
 
 const collapsed = ref(false)
-const auth = useAuthStore()
 const year = computed(() => new Date().getFullYear())
 
-const logout = () => auth.logout()
+// Map backend icon string → actual component
+const icons: Record<string, any> = {
+  HomeOutlined,
+  SettingOutlined,
+  UserOutlined,
+  AppstoreOutlined,
+}
+
+const DefaultIcon = AppstoreOutlined
+
+const menus = computed(() => auth.user?.menus || [])
+
+const navigate = (route: string) => {
+  router.push(route)
+}
+
+const logout = () => {
+  auth.logout()
+}
+
+onMounted(() => {
+  if (auth.token && !auth.user) {
+    auth.fetchUser()
+  }
+})
 </script>
+
+

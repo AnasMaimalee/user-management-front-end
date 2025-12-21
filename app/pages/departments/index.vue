@@ -3,7 +3,10 @@
     <div class="flex justify-between items-center mb-4">
       <h1 class="text-2xl font-bold text-slate-800">Departments</h1>
 
-      <a-button type="primary" @click="showCreate = true">
+      <a-button 
+        v-if="userStore.can('create departments')"
+        type="primary" 
+        @click="showCreate = true">
         Create Department
       </a-button>
     </div>
@@ -46,17 +49,25 @@
 
             <template #overlay>
               <a-menu>
-                <a-menu-item @click="openUpdate(record)">
+                
+                <a-menu-item 
+                v-if="userStore.can('update departments')"
+                @click="openUpdate(record)">
                   Update
                 </a-menu-item>
 
-                <a-menu-item @click="toggleStatus(record)">
+
+                <a-menu-item 
+                v-if="userStore.can('update department status')"
+                @click="toggleStatus(record)">
                   {{ record.status === 'active' ? 'Deactivate' : 'Activate' }}
                 </a-menu-item>
 
                 <a-menu-divider />
 
-                <a-menu-item danger @click="confirmDelete(record)">
+                <a-menu-item danger
+                v-if="userStore.can('delete departments')"
+                @click="confirmDelete(record)">
                   Delete
                 </a-menu-item>
               </a-menu>
@@ -89,6 +100,10 @@ import api from '~/utils/api'
 import { message, Modal } from 'ant-design-vue'
 import { EllipsisOutlined } from '@ant-design/icons-vue'
 
+import { useUserStore } from '~/stores/user'
+const userStore = useUserStore()
+await userStore.fetchUser()
+
 import CreateDepartment from '~/components/departments/CreateDepartment.vue'
 import UpdateDepartment from '~/components/departments/UpdateDepartment.vue'
 
@@ -110,10 +125,17 @@ const fetchDepartments = async () => {
   try {
     const res = await api.get('/departments')
     departments.value = res.data
+    console.log(departments, "Dep")
   } catch (err: any) {
-    error.value = err.response?.data?.message || 'Failed to load departments'
+    console.error(err) // check actual error
+    if (err.response?.status === 403) {
+      error.value = 'You do not have permission to view departments'
+    } else {
+      error.value = err.response?.data?.message || 'Failed to load departments'
+    }
   }
 }
+
 
 const confirmDelete = (record: any) => {
   Modal.confirm({
