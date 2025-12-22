@@ -247,12 +247,20 @@ const confirmDelete = (record: any) => {
 }
 
 const toggleStatus = async (record: any) => {
+  const employee = employees.value.find(e => e.id === record.id);
+  if (!employee) return;
+
+  const oldStatus = employee.status;
+  employee.status = oldStatus === 'active' ? 'inactive' : 'active';
+
   try {
-    await api.patch(`/employees/${record.id}/status`)
-    message.success(`Employee ${record.status === 'active' ? 'deactivated' : 'activated'}`)
-    fetchEmployees()
-  } catch {
-    message.error('Failed to update status')
+    await api.patch(`/employees/${record.id}/status`); // No body needed
+
+    message.success(`Employee ${employee.status === 'active' ? 'activated' : 'deactivated'}`);
+  } catch (err) {
+    employee.status = oldStatus; // Revert
+    message.error('Failed to update status');
+    fetchEmployees(); // Force sync
   }
 }
 
