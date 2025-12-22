@@ -16,12 +16,16 @@
           </div>
           <span v-if="!collapsed" class="font-bold text-xl text-gray-800">Maimalee</span>
         </div>
-        <a-button @click="collapsed = !collapsed" type="text" class="text-gray-600 hover:text-gray-900">
-          <icon :name="collapsed ? 'heroicons:chevron-right-20-solid' : 'heroicons:chevron-left-20-solid'" class="w-5 h-5" />
+        <!-- Toggle Button - Blue icon -->
+        <a-button @click="collapsed = !collapsed" type="text" class="text-blue-600 hover:text-blue-700">
+          <icon 
+            :name="collapsed ? 'heroicons:chevron-right-20-solid' : 'heroicons:chevron-left-20-solid'" 
+            class="w-5 h-5"
+          />
         </a-button>
       </div>
 
-      <!-- User Info Section (Disappears when collapsed) -->
+      <!-- User Info Section (Hidden when collapsed) -->
       <div v-if="!collapsed" class="px-5 py-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
         <div class="flex items-center gap-4">
           <a-avatar size="large" style="background-color:#1677ff" class="shadow-md">
@@ -34,7 +38,7 @@
         </div>
       </div>
 
-      <!-- Menu -->
+      <!-- Menu Items -->
       <div class="flex-1 overflow-y-auto py-4">
         <a-menu
           theme="light"
@@ -47,28 +51,37 @@
             v-for="menu in menus"
             :key="menu.route"
             @click="navigate(menu.route)"
-            class="mx-2 rounded-lg mb-1 transition-all"
+            class="mx-3 rounded-lg mb-1 transition-all group"
             :class="currentRoute === menu.route ? 'bg-blue-50 text-blue-600 font-medium' : 'hover:bg-gray-100'"
           >
-            <div class="flex items-center gap-3">
-              <icon :name="icons[menu.icon] || 'heroicons:cube-20-solid'" class="w-5 h-5" />
-              <span class="text-base">{{ menu.title }}</span>
+            <div class="flex items-center gap-4">
+              <!-- Icons: Use currentColor for fill/stroke to allow CSS coloring -->
+              <icon
+                :name="menu.icon || 'heroicons:cube-20-solid'"
+                class="w-6 h-6 flex-shrink-0"
+                :class="[
+                  'transition-colors',
+                  currentRoute === menu.route ? 'text-blue-700' : 'text-blue-600 group-hover:text-blue-700'
+                ]"
+              />
+              <!-- Title (Hidden when collapsed) -->
+              <span class="text-base truncate">{{ menu.title }}</span>
             </div>
           </a-menu-item>
         </a-menu>
       </div>
 
-      <!-- Logout at Bottom -->
+      <!-- Logout Button at Bottom -->
       <div class="p-4 border-t border-gray-100">
         <a-button
           type="text"
           danger
           block
           @click="logout"
-          class="flex items-center justify-center gap-3 hover:bg-red-50 transition"
+          class="flex items-center justify-center gap-4 hover:bg-red-50 transition rounded-lg py-3"
         >
-          <icon name="heroicons:arrow-right-on-rectangle-20-solid" class="w-5 h-5" />
-          <span v-if="!collapsed">Logout</span>
+          <icon name="heroicons:arrow-right-on-rectangle-20-solid" class="w-6 h-6 text-red-600" />
+          <span v-if="!collapsed" class="font-medium">Logout</span>
         </a-button>
       </div>
     </aside>
@@ -82,24 +95,26 @@
         <!-- User Dropdown (Top Right) -->
         <a-dropdown placement="bottomRight">
           <div class="flex items-center gap-3 cursor-pointer px-4 py-2 rounded-lg hover:bg-gray-100 transition">
-           
-            <div class="hidden md:block">
+            <a-avatar size="default" style="background-color:#1677ff">
+              {{ firstName.charAt(0).toUpperCase() }}
+            </a-avatar>
+            <div class="hidden md:block mt-4">
               <p class="font-medium text-gray-800">{{ firstName }}</p>
             </div>
           </div>
           <template #overlay>
-            <a-menu>
+            <a-menu class="shadow-lg">
               <a-menu-item @click="router.push('/profile')">
-                <icon name="heroicons:user-20-solid" class="w-4 h-4 mr-2" />
+                <icon name="heroicons:user-20-solid" class="w-4 h-4 mr-2 text-blue-600" />
                 Profile
               </a-menu-item>
               <a-menu-item @click="router.push('/settings')">
-                <icon name="heroicons:cog-8-tooth-20-solid" class="w-4 h-4 mr-2" />
+                <icon name="heroicons:cog-8-tooth-20-solid" class="w-4 h-4 mr-2 text-blue-600" />
                 Settings
               </a-menu-item>
               <a-menu-divider />
               <a-menu-item danger @click="logout">
-                <icon name="heroicons:arrow-right-on-rectangle-20-solid" class="w-4 h-4 mr-2" />
+                <icon name="heroicons:arrow-right-on-rectangle-20-solid" class="w-4 h-4 mr-2 text-red-600" />
                 Logout
               </a-menu-item>
             </a-menu>
@@ -139,7 +154,6 @@ const firstName = computed(() => {
 
 const currentRoute = computed(() => route.path)
 
-// Better page title from route
 const currentPageTitle = computed(() => {
   const path = route.path
   if (path === '/dashboard') return 'Dashboard'
@@ -150,23 +164,30 @@ const currentPageTitle = computed(() => {
   return 'Dashboard'
 })
 
-// Icon mapping (using nuxt-icon names)
-const icons: Record<string, string> = {
+// Map backend icon strings to nuxt-icon names (blue theme)
+const menuIconMap: Record<string, string> = {
   HomeOutlined: 'heroicons:home-20-solid',
-  UserOutlined: 'heroicons:user-group-20-solid',
-  SettingOutlined: 'heroicons:cog-8-tooth-20-solid',
-  AppstoreOutlined: 'heroicons:view-columns-20-solid',
-  // Add more as needed
+  Dashboard: 'heroicons:chart-pie-20-solid',
+  Employees: 'heroicons:user-group-20-solid',
+  Departments: 'heroicons:building-office-2-20-solid',
+  Ranks: 'heroicons:academic-cap-20-solid',
+  Branches: 'heroicons:map-pin-20-solid',
+  Settings: 'heroicons:cog-8-tooth-20-solid',
+  Profile: 'heroicons:user-20-solid',
 }
 
 const defaultMenus = [
-  { title: 'Dashboard', route: '/dashboard', icon: 'HomeOutlined' },
+  { title: 'Dashboard', route: '/dashboard', icon: 'heroicons:home-20-solid' },
 ]
 
 const menus = computed(() => {
   const backendMenus = auth.user?.menus || []
-  const filtered = backendMenus.filter((menu: any) => menu.route !== '/dashboard')
-  return [...defaultMenus, ...filtered]
+  const dynamicMenus = backendMenus.map((menu: any) => ({
+    title: menu.title,
+    route: menu.route,
+    icon: menuIconMap[menu.icon] || menuIconMap[menu.title] || 'heroicons:cube-20-solid',
+  }))
+  return [...defaultMenus, ...dynamicMenus]
 })
 
 const navigate = (path: string) => {
@@ -188,15 +209,9 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Active menu item highlight */
-:deep(.ant-menu-item-selected) {
-  background-color: #e6f4ff !important;
-  color: #1677ff !important;
-  border-right: 3px solid #1677ff;
-}
+/* Ensure all Heroicons (solid style) use current text color */
+/* Heroicons solid use fill="currentColor" by default, so text-* classes work perfectly */
 
-/* Smooth scroll for menu */
-.overflow-y-auto {
-  scrollbar-width: thin;
-}
+
+/* Toggle button icon is already handled by parent text-blue-600 */
 </style>
