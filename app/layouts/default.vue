@@ -55,14 +55,11 @@
             :class="currentRoute === menu.route ? 'bg-blue-50 text-blue-600 font-medium' : 'hover:bg-gray-100'"
           >
             <div class="flex items-center gap-4">
-              <!-- Icons: Use currentColor for fill/stroke to allow CSS coloring -->
+              <!-- All icons: Blue by default -->
               <icon
                 :name="menu.icon || 'heroicons:cube-20-solid'"
-                class="w-6 h-6 flex-shrink-0"
-                :class="[
-                  'transition-colors',
-                  currentRoute === menu.route ? 'text-blue-700' : 'text-blue-600 group-hover:text-blue-700'
-                ]"
+                class="w-6 h-6 flex-shrink-0 text-blue-600"
+                :class="currentRoute === menu.route ? 'text-blue-700' : 'group-hover:text-blue-700'"
               />
               <!-- Title (Hidden when collapsed) -->
               <span class="text-base truncate">{{ menu.title }}</span>
@@ -209,9 +206,44 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Ensure all Heroicons (solid style) use current text color */
-/* Heroicons solid use fill="currentColor" by default, so text-* classes work perfectly */
+/* Force ALL icons to blue - Maximum priority */
+:deep(.icon),
+:deep(svg) {
+  color: #1677ff !important;
+  fill: #1677ff !important;
+}
 
+/* Active darker blue */
+:deep(.ant-menu-item-selected .icon),
+:deep(.ant-menu-item-selected svg) {
+  color: #1d4ed8 !important;
+  fill: #1d4ed8 !important;
+}
 
-/* Toggle button icon is already handled by parent text-blue-600 */
+/* Hover darker blue */
+:deep(.ant-menu-item:hover .icon),
+:deep(.ant-menu-item:hover svg) {
+  color: #1d4ed8 !important;
+  fill: #1d4ed8 !important;
+}
+
+/* Toggle button icon */
+:deep(.ant-btn .icon),
+:deep(.ant-btn svg) {
+  color: #1677ff !important;
+  fill: #1677ff !important;
+}
+
+/* Active menu item */
+:deep(.ant-menu-item-selected) {
+  background-color: #e6f4ff !important;
+  color: #1677ff !important;
+  border-right: 4px solid #1677ff;
+  font-weight: 500;
+}
+
+/* Hover effect */
+:deep(.ant-menu-item:hover:not(.ant-menu-item-selected)) {
+  background-color: #f0f9ff !important;
+}
 </style>
