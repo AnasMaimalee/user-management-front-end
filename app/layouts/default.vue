@@ -176,17 +176,22 @@ const menuIconMap: Record<string, string> = {
 const defaultMenus = [
   { title: 'Dashboard', route: '/dashboard', icon: 'heroicons:home-20-solid' },
 ]
-
 const menus = computed(() => {
   const backendMenus = auth.user?.menus || []
-  const dynamicMenus = backendMenus.map((menu: any) => ({
+
+  // Only show items allowed for this user's role
+  const role = auth.user?.role
+  const filteredMenus = backendMenus.filter((menu: any) => {
+    if (!menu.roles) return true // show if roles not defined
+    return menu.roles.includes(role)
+  })
+
+  return [...defaultMenus, ...filteredMenus.map((menu: any) => ({
     title: menu.title,
     route: menu.route,
     icon: menuIconMap[menu.icon] || menuIconMap[menu.title] || 'heroicons:cube-20-solid',
-  }))
-  return [...defaultMenus, ...dynamicMenus]
+  }))]
 })
-
 const navigate = (path: string) => {
   if (route.path !== path) {
     router.push(path)

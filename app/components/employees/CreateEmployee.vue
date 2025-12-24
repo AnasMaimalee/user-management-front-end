@@ -30,7 +30,12 @@
       <a-form-item label="Email" required>
         <a-input v-model:value="email" type="email" placeholder="Enter email address" />
       </a-form-item>
-
+      <a-form-item label="Role" required>
+        <a-select v-model:value="role" placeholder="Select role">
+          <a-select-option value="staff">Staff</a-select-option>
+          <a-select-option value="admin">Admin</a-select-option>
+        </a-select>
+      </a-form-item>
       <!-- Optional Selects -->
       <a-form-item label="Department">
         <a-select
@@ -91,6 +96,8 @@ const employeeCodePreview = ref('Loading...')
 const firstName = ref('')
 const lastName = ref('')
 const email = ref('')
+const role = ref<'staff' | 'admin'>('staff')
+
 const departmentId = ref<string | null>(null)
 const rankId = ref<string | null>(null)
 const branchId = ref<string | null>(null)
@@ -185,6 +192,15 @@ const submit = async () => {
   const trimmedLastName = lastName.value.trim()
   const trimmedEmail = email.value.trim()
 
+
+  if (!role.value) {
+  notification.error({
+    message: 'Role Required',
+    description: 'Please select a role.',
+  })
+  return
+}
+
   // Only validate the actual required fields
   if (!trimmedFirstName || !trimmedLastName || !trimmedEmail) {
     notification.error({
@@ -204,16 +220,16 @@ const submit = async () => {
   }
 
   submitting.value = true
-
   const payload = {
     first_name: trimmedFirstName,
     last_name: trimmedLastName,
     email: trimmedEmail,
+    role: role.value, // ✅ added
     department_id: departmentId.value || null,
     rank_id: rankId.value || null,
     branch_id: branchId.value || null,
-    // employee_code is NOT sent — generated on backend
   }
+
 
   try {
     const res = await api.post('/employees', payload)
