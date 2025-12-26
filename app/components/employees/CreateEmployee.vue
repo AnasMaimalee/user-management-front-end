@@ -230,18 +230,21 @@ const fetchDepartments = async () => {
     loadingDepartments.value = false
   }
 }
-
 const fetchRanks = async () => {
   loadingRanks.value = true
   try {
     const res = await api.get('/ranks')
-    ranks.value = Array.isArray(res.data) ? res.data : res.data.data || []
+
+    ranks.value = Array.isArray(res.data?.[0])
+      ? res.data[0]
+      : res.data
   } catch {
     notification.error({ message: 'Failed to load ranks' })
   } finally {
     loadingRanks.value = false
   }
 }
+
 
 const fetchBranches = async () => {
   loadingBranches.value = true
