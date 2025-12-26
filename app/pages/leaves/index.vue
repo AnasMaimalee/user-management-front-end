@@ -274,7 +274,6 @@ const openStatusModal = (record: any, action: 'approved' | 'rejected') => {
   noteError.value = ''
   statusModal.visible = true
 }
-
 const handleStatusUpdate = async () => {
   if (!statusModal.record || !statusModal.action) return
 
@@ -298,9 +297,10 @@ const handleStatusUpdate = async () => {
       admin_note: statusModal.note.trim() || null,
     })
 
-    // ← Use $message (reliable in Nuxt)
-    $message.success({
-      content: `Leave request ${statusModal.action === 'approved' ? 'approved' : 'rejected'} successfully!`,
+    message.success({
+      content: `Leave request ${
+        statusModal.action === 'approved' ? 'approved' : 'rejected'
+      } successfully!`,
       duration: 4,
     })
 
@@ -316,7 +316,7 @@ const handleStatusUpdate = async () => {
       errorMessage = 'Network error. Please check your connection.'
     }
 
-    $message.error({
+    message.error({
       content: errorMessage,
       duration: 5,
     })
