@@ -5,83 +5,150 @@
     @cancel="handleClose"
     @ok="submit"
     :confirm-loading="submitting"
+    width="700px"
   >
     <a-form layout="vertical">
-      
       <!-- Auto-generated Employee Code (Preview only) -->
-      <a-form-item label="Employee Code" required>
+      <a-form-item label="Employee Code">
         <a-input
           :value="employeeCodePreview"
           disabled
           :placeholder="employeeCodePreview === 'Loading...' ? 'Loading...' : 'Auto-generated'"
           class="bg-gray-50"
         />
+        <div class="text-xs text-gray-500 mt-1">This will be assigned automatically upon creation</div>
       </a-form-item>
 
-      <!-- Required Fields -->
-      <a-form-item label="First Name" required>
-        <a-input v-model:value="firstName" placeholder="Enter first name" />
-      </a-form-item>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Left Column -->
+        <div class="space-y-4">
+          <a-form-item label="First Name" required>
+            <a-input v-model:value="employee.first_name" placeholder="Enter first name" />
+          </a-form-item>
 
-      <a-form-item label="Last Name" required>
-        <a-input v-model:value="lastName" placeholder="Enter last name" />
-      </a-form-item>
+          <a-form-item label="Last Name" required>
+            <a-input v-model:value="employee.last_name" placeholder="Enter last name" />
+          </a-form-item>
 
-      <a-form-item label="Email" required>
-        <a-input v-model:value="email" type="email" placeholder="Enter email address" />
-      </a-form-item>
-      <a-form-item label="Role" required>
-        <a-select v-model:value="role" placeholder="Select role">
-          <a-select-option value="staff">Staff</a-select-option>
-          <a-select-option value="admin">Admin</a-select-option>
-        </a-select>
-      </a-form-item>
-      <!-- Optional Selects -->
-      <a-form-item label="Department">
-        <a-select
-          v-model:value="departmentId"
-          placeholder="Select a department"
-          allow-clear
-          :loading="loadingDepartments"
-        >
-          <a-select-option v-for="dept in departments" :key="dept.id" :value="dept.id">
-            {{ dept.name }}
-          </a-select-option>
-        </a-select>
-      </a-form-item>
+          <a-form-item label="Email" required>
+            <a-input v-model:value="employee.email" type="email" placeholder="Enter email address" />
+          </a-form-item>
 
-      <a-form-item label="Rank">
-        <a-select
-          v-model:value="rankId"
-          placeholder="Select a rank"
-          allow-clear
-          :loading="loadingRanks"
-        >
-          <a-select-option v-for="rank in ranks" :key="rank.id" :value="rank.id">
-            {{ rank.name }}
-          </a-select-option>
-        </a-select>
-      </a-form-item>
+          <a-form-item label="Role" required>
+            <a-select v-model:value="employee.role" placeholder="Select role">
+              <a-select-option value="staff">Staff</a-select-option>
+              <a-select-option value="admin">Admin</a-select-option>
+              <a-select-option value="hr">HR</a-select-option>
+            </a-select>
+          </a-form-item>
+        </div>
 
-      <a-form-item label="Branch">
-        <a-select
-          v-model:value="branchId"
-          placeholder="Select a branch"
-          allow-clear
-          :loading="loadingBranches"
-        >
-          <a-select-option v-for="branch in branches" :key="branch.id" :value="branch.id">
-            {{ branch.name }}
-          </a-select-option>
-        </a-select>
-      </a-form-item>
+        <!-- Right Column -->
+        <div class="space-y-4">
+          <a-form-item label="Department">
+            <a-select
+              v-model:value="employee.department_id"
+              placeholder="Select department"
+              allow-clear
+              :loading="loadingDepartments"
+            >
+              <a-select-option v-for="dept in departments" :key="dept.id" :value="dept.id">
+                {{ dept.name }}
+              </a-select-option>
+            </a-select>
+          </a-form-item>
 
+          <a-form-item label="Rank">
+            <a-select
+              v-model:value="employee.rank_id"
+              placeholder="Select rank"
+              allow-clear
+              :loading="loadingRanks"
+            >
+              <a-select-option v-for="rank in ranks" :key="rank.id" :value="rank.id">
+                {{ rank.name }}
+              </a-select-option>
+            </a-select>
+          </a-form-item>
+
+          <a-form-item label="Branch">
+            <a-select
+              v-model:value="employee.branch_id"
+              placeholder="Select branch"
+              allow-clear
+              :loading="loadingBranches"
+            >
+              <a-select-option v-for="branch in branches" :key="branch.id" :value="branch.id">
+                {{ branch.name }}
+              </a-select-option>
+            </a-select>
+          </a-form-item>
+        </div>
+      </div>
+
+      <!-- Salary Section -->
+      <div class="mt-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+        <h3 class="text-lg font-semibold text-slate-800 mb-6">Salary & Savings Settings</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <a-form-item label="Basic Salary (₦)">
+            <a-input-number
+              v-model:value="employee.basic_salary"
+              :min="0"
+              :step="1000"
+              :formatter="value => value ? `₦ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : ''"
+              :parser="value => value.replace(/\₦\s?|(,*)/g, '')"
+              class="w-full"
+              placeholder="0"
+            />
+          </a-form-item>
+
+          <a-form-item label="Allowances (₦)">
+            <a-input-number
+              v-model:value="employee.allowances"
+              :min="0"
+              :step="1000"
+              :formatter="value => value ? `₦ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : ''"
+              :parser="value => value.replace(/\₦\s?|(,*)/g, '')"
+              class="w-full"
+              placeholder="0"
+            />
+          </a-form-item>
+
+          <a-form-item label="Deductions (₦)">
+            <a-input-number
+              v-model:value="employee.deductions"
+              :min="0"
+              :step="1000"
+              :formatter="value => value ? `₦ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : ''"
+              :parser="value => value.replace(/\₦\s?|(,*)/g, '')"
+              class="w-full"
+              placeholder="0"
+            />
+          </a-form-item>
+
+          <a-form-item label="Monthly Savings Deduction (₦)">
+            <a-input-number
+              v-model:value="employee.monthly_savings"
+              :min="0"
+              :step="1000"
+              :formatter="value => value ? `₦ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : ''"
+              :parser="value => value.replace(/\₦\s?|(,*)/g, '')"
+              class="w-full"
+              placeholder="0"
+            />
+            <div class="text-sm text-slate-600 mt-1">
+              Amount automatically deducted monthly and added to employee's savings wallet
+            </div>
+          </a-form-item>
+        </div>
+      </div>
     </a-form>
   </a-modal>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, reactive } from 'vue'
 import api from '~/utils/api'
 import { notification } from 'ant-design-vue'
 
@@ -90,19 +157,24 @@ const emit = defineEmits(['close', 'created'])
 
 const localOpen = ref(false)
 const submitting = ref(false)
-
 const employeeCodePreview = ref('Loading...')
 
-const firstName = ref('')
-const lastName = ref('')
-const email = ref('')
-const role = ref<'staff' | 'admin'>('staff')
+// Reactive employee object with all fields
+const employee = reactive({
+  first_name: '',
+  last_name: '',
+  email: '',
+  role: 'staff' as 'staff' | 'admin' | 'hr',
+  department_id: null as string | null,
+  rank_id: null as string | null,
+  branch_id: null as string | null,
+  basic_salary: 0,
+  allowances: 0,
+  deductions: 0,
+  monthly_savings: 0,
+})
 
-const departmentId = ref<string | null>(null)
-const rankId = ref<string | null>(null)
-const branchId = ref<string | null>(null)
-
-// Data
+// Dropdown data
 const departments = ref<Array<{ id: string; name: string }>>([])
 const ranks = ref<Array<{ id: string; name: string }>>([])
 const branches = ref<Array<{ id: string; name: string }>>([])
@@ -115,24 +187,38 @@ const loadingBranches = ref(false)
 watch(() => props.open, (val) => {
   localOpen.value = val
   if (val) {
-    // Refresh next code every time modal opens (in case someone else created one)
     fetchNextEmployeeCode()
+    fetchDepartments()
+    fetchRanks()
+    fetchBranches()
+    // Reset form
+    Object.assign(employee, {
+      first_name: '',
+      last_name: '',
+      email: '',
+      role: 'staff',
+      department_id: null,
+      rank_id: null,
+      branch_id: null,
+      basic_salary: 0,
+      allowances: 0,
+      deductions: 0,
+      monthly_savings: 0,
+    })
   }
 })
 
-// Fetch next employee code preview
+// Fetch next employee code
 const fetchNextEmployeeCode = async () => {
   employeeCodePreview.value = 'Loading...'
   try {
     const res = await api.get('/employees/next-code')
     employeeCodePreview.value = res.data.code || 'EMP-??'
-  } catch (err) {
-    console.error('Failed to fetch next employee code:', err)
+  } catch {
     employeeCodePreview.value = 'EMP-??'
   }
 }
 
-// Fetch dropdown data
 const fetchDepartments = async () => {
   loadingDepartments.value = true
   try {
@@ -149,16 +235,9 @@ const fetchRanks = async () => {
   loadingRanks.value = true
   try {
     const res = await api.get('/ranks')
-    let rankList = []
-    if (Array.isArray(res.data)) {
-      rankList = res.data.flat()
-    } else if (res.data?.data) {
-      rankList = Array.isArray(res.data.data) ? res.data.data.flat() : []
-    }
-    ranks.value = rankList
+    ranks.value = Array.isArray(res.data) ? res.data : res.data.data || []
   } catch {
     notification.error({ message: 'Failed to load ranks' })
-    ranks.value = []
   } finally {
     loadingRanks.value = false
   }
@@ -170,41 +249,24 @@ const fetchBranches = async () => {
     const res = await api.get('/branches')
     branches.value = res.data || []
   } catch {
-    branches.value = []
+    notification.error({ message: 'Failed to load branches' })
   } finally {
     loadingBranches.value = false
   }
 }
 
-// Load data once on mount
-watch(localOpen, (isOpen) => {
-  if (isOpen) {
-    fetchDepartments()
-    fetchRanks()
-    fetchBranches()
-  }
-}, { immediate: true })
-
-const handleClose = () => emit('close')
-
-const submit = async () => {
-  const trimmedFirstName = firstName.value.trim()
-  const trimmedLastName = lastName.value.trim()
-  const trimmedEmail = email.value.trim()
-
-
-  if (!role.value) {
-  notification.error({
-    message: 'Role Required',
-    description: 'Please select a role.',
-  })
-  return
+const handleClose = () => {
+  emit('close')
 }
 
-  // Only validate the actual required fields
+const submit = async () => {
+  const trimmedFirstName = employee.first_name.trim()
+  const trimmedLastName = employee.last_name.trim()
+  const trimmedEmail = employee.email.trim()
+
   if (!trimmedFirstName || !trimmedLastName || !trimmedEmail) {
     notification.error({
-      message: 'Required Fields Missing',
+      message: 'Required Fields',
       description: 'First Name, Last Name, and Email are required.',
     })
     return
@@ -220,38 +282,30 @@ const submit = async () => {
   }
 
   submitting.value = true
-  const payload = {
-    first_name: trimmedFirstName,
-    last_name: trimmedLastName,
-    email: trimmedEmail,
-    role: role.value, // ✅ added
-    department_id: departmentId.value || null,
-    rank_id: rankId.value || null,
-    branch_id: branchId.value || null,
-  }
-
 
   try {
-    const res = await api.post('/employees', payload)
+    await api.post('/employees', {
+      first_name: trimmedFirstName,
+      last_name: trimmedLastName,
+      email: trimmedEmail,
+      role: employee.role,
+      department_id: employee.department_id,
+      rank_id: employee.rank_id,
+      branch_id: employee.branch_id,
+      basic_salary: employee.basic_salary || 0,
+      allowances: employee.allowances || 0,
+      deductions: employee.deductions || 0,
+      monthly_savings: employee.monthly_savings || 0,
+    })
 
     notification.success({
-      message: 'Success!',
-      description: 'Employee created successfully.',
+      message: 'Employee Created!',
+      description: 'New employee added successfully with salary settings.',
     })
 
     emit('created')
     emit('close')
-
-    // Reset form
-    firstName.value = ''
-    lastName.value = ''
-    email.value = ''
-    departmentId.value = null
-    rankId.value = null
-    branchId.value = null
   } catch (err: any) {
-    console.error('Employee creation failed:', err)
-
     const serverMessage = err.response?.data?.message
     const errors = err.response?.data?.errors
 
@@ -264,7 +318,7 @@ const submit = async () => {
       })
     } else if (serverMessage) {
       notification.error({
-        message: 'Failed',
+        message: 'Creation Failed',
         description: serverMessage,
       })
     } else {
