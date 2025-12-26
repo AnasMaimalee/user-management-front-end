@@ -1,134 +1,110 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
     <!-- Compact Header -->
-    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-10 px-6 shadow-md">
-      <div class="max-w-6xl mx-auto">
-        <h1 class="text-3xl md:text-4xl font-bold mb-2">My Savings Wallet</h1>
-        <p class="text-base opacity-90">Grow your savings effortlessly with every paycheck</p>
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-10 px-6">
+      <div class="max-w-6xl mx-auto text-center">
+        <h1 class="text-3xl font-bold mb-2">My Savings Wallet</h1>
+        <p class="text-base opacity-90">Build your future, one deduction at a time</p>
       </div>
     </div>
 
-    <!-- Main Content -->
     <div class="max-w-6xl mx-auto px-6 -mt-6">
-      <!-- Balance Card (Smaller & Cleaner) -->
-      <div class="bg-white rounded-xl shadow-lg p-6 mb-8 hover:shadow-xl transition">
-        <p class="text-slate-500 text-sm mb-2">Current Balance</p>
-        <p class="text-5xl font-bold text-primary mb-6">
-          ₦{{ Number(wallet.balance).toLocaleString('en-NG') }}
-        </p>
+      <!-- Balance & Goal Card -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <!-- Balance -->
+        <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition">
+          <p class="text-slate-500 text-sm mb-2">Current Balance</p>
+          <p class="text-4xl font-bold text-primary">
+            ₦{{ Number(wallet.balance).toLocaleString('en-NG') }}
+          </p>
+          <div class="mt-4 flex items-center justify-between">
+            <div>
+              <p class="text-xs text-slate-500">Monthly Savings</p>
+              <p class="text-xl font-semibold text-success">
+                ₦{{ Number(wallet.monthly_savings).toLocaleString() }}
+              </p>
+            </div>
+            <div class="text-right">
+              <p class="text-xs text-slate-500">Next Deposit</p>
+              <p class="text-lg font-medium text-primary">{{ nextDepositDate }}</p>
+            </div>
+          </div>
+        </div>
 
-        <div class="grid grid-cols-2 gap-8">
-          <div>
-            <p class="text-slate-500 text-sm">Monthly Savings</p>
-            <p class="text-2xl font-semibold text-success">
-              ₦{{ Number(wallet.monthly_savings).toLocaleString() }}
-            </p>
+        <!-- Goal Progress -->
+        <div v-if="wallet.goal_amount > 0" class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition">
+          <p class="text-slate-500 text-sm mb-3">Savings Goal</p>
+          <p class="text-xl font-semibold text-slate-800 mb-4">{{ wallet.goal_name }}</p>
+          <div class="w-full bg-slate-200 rounded-full h-8 mb-3">
+            <div
+              class="bg-gradient-to-r from-green-500 to-emerald-600 h-8 rounded-full flex items-center justify-end pr-4 text-white font-bold transition-all"
+              :style="{ width: goalProgress + '%' }"
+            >
+              {{ goalProgress.toFixed(0) }}%
+            </div>
           </div>
-          <div>
-            <p class="text-slate-500 text-sm">Next Deposit</p>
-            <p class="text-2xl font-semibold text-primary">
-              {{ nextDepositDate }}
-            </p>
+          <div class="flex justify-between text-sm">
+            <span>₦{{ Number(wallet.balance).toLocaleString() }}</span>
+            <span class="font-medium">₦{{ Number(wallet.goal_amount).toLocaleString() }}</span>
           </div>
+          <p class="text-xs text-slate-500 mt-2">Target: {{ formatDate(wallet.goal_target_date) }}</p>
+        </div>
+
+        <div v-else class="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transition cursor-pointer" @click="showGoalModal = true">
+          <div class="text-6xl mb-4">🎯</div>
+          <p class="font-semibold text-slate-800">No Goal Set</p>
+          <p class="text-sm text-slate-600 mt-2">Click to create your first savings goal</p>
         </div>
       </div>
 
-      <!-- Quick Actions (Small & Neat) -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-5 mb-10">
-        <button
-          @click="showWithdrawModal = true"
-          class="bg-white rounded-lg shadow p-5 text-center hover:shadow-md transition border border-slate-200"
-        >
-          <div class="w-12 h-12 bg-error/10 rounded-full mx-auto mb-3 flex items-center justify-center">
-            <span class="text-2xl text-error">🏧</span>
-          </div>
-          <p class="text-sm font-medium text-slate-800">Withdraw</p>
+      <!-- Quick Actions -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-5 mb-8">
+        <button @click="showWithdrawModal = true" class="bg-white rounded-lg shadow p-5 text-center hover:shadow-md hover:cursor-pointer transition">
+          <span class="text-3xl block mb-2 text-error">🏧</span>
+          <p class="text-sm font-medium">Withdraw</p>
         </button>
 
-        <button
-          @click="showDepositModal = true"
-          class="bg-white rounded-lg shadow p-5 text-center hover:shadow-md transition border border-slate-200"
-        >
-          <div class="w-12 h-12 bg-success/10 rounded-full mx-auto mb-3 flex items-center justify-center">
-            <span class="text-2xl text-success">💰</span>
-          </div>
-          <p class="text-sm font-medium text-slate-800">Add Money</p>
+        <button @click="showDepositModal = true" class="bg-white  rounded-lg shadow p-5 text-center hover:shadow-md hover:cursor-pointer transition">
+          <span class="text-3xl block mb-2 text-success">💰</span>
+          <p class="text-sm font-medium">Add Money</p>
         </button>
 
-        <button
-          @click="showGoalModal = true"
-          class="bg-white rounded-lg shadow p-5 text-center hover:shadow-md transition border border-slate-200"
-        >
-          <div class="w-12 h-12 bg-warning/10 rounded-full mx-auto mb-3 flex items-center justify-center">
-            <span class="text-2xl text-warning">🎯</span>
-          </div>
-          <p class="text-sm font-medium text-slate-800">Set Goal</p>
+        <button @click="showGoalModal = true" class="bg-white rounded-lg shadow p-5 text-center hover:shadow-md hover:cursor-pointer transition ">
+          <span class="text-3xl block mb-2 text-warning">🎯</span>
+          <p class="text-sm font-medium">Set Goal</p>
         </button>
 
-        <div class="bg-white rounded-lg shadow p-5 text-center border border-slate-200">
-          <div class="w-12 h-12 bg-primary/10 rounded-full mx-auto mb-3 flex items-center justify-center">
-            <span class="text-2xl text-primary">📊</span>
-          </div>
-          <p class="text-sm font-medium text-slate-800">History</p>
+        <div class="bg-white rounded-lg shadow p-5 text-center hover:cursor-pointer hover:shadow-md">
+          <span class="text-3xl block mb-2 text-primary">📊</span>
+          <p class="text-sm font-medium">History</p>
         </div>
       </div>
 
-      <!-- Recent Transactions (Compact) -->
+      <!-- Transactions -->
       <div class="bg-white rounded-xl shadow-lg p-6">
-        <div class="flex justify-between items-center mb-5">
-          <h2 class="text-xl font-semibold text-slate-800">Recent Transactions</h2>
-          <a-button type="link" class="text-primary text-sm">View All →</a-button>
-        </div>
-
-        <div v-if="transactions.length === 0" class="text-center py-12">
-          <span class="text-6xl opacity-20">🌱</span>
+        <h2 class="text-xl font-semibold mb-5">Recent Transactions</h2>
+        <div v-if="transactions.length === 0" class="text-center py-10">
+          <span class="text-5xl opacity-20">🌱</span>
           <p class="text-slate-600 mt-4">No transactions yet</p>
-          <p class="text-sm text-slate-500">Your savings will appear after payroll</p>
         </div>
-
         <div v-else class="space-y-3">
-          <div
-            v-for="tx in transactions.slice(0, 6)"
-            :key="tx.id"
-            class="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition"
-          >
+          <div v-for="tx in transactions.slice(0, 6)" :key="tx.id" class="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
             <div class="flex items-center gap-4">
-              <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl"
-                :class="tx.type === 'deposit' ? 'bg-success/10 text-success' : 'bg-error/10 text-error'"
-              >
+              <span class="text-2xl" :class="tx.type === 'deposit' ? 'text-success' : 'text-error'">
                 {{ tx.type === 'deposit' ? '↑' : '↓' }}
-              </div>
+              </span>
               <div>
-                <p class="text-sm font-medium text-slate-800">{{ tx.description || tx.type.toUpperCase() }}</p>
+                <p class="font-medium">{{ tx.description || tx.type.toUpperCase() }}</p>
                 <p class="text-xs text-slate-500">{{ formatDate(tx.created_at) }}</p>
               </div>
             </div>
-
             <p class="text-lg font-bold" :class="tx.type === 'deposit' ? 'text-success' : 'text-error'">
               {{ tx.type === 'deposit' ? '+' : '-' }}₦{{ Number(tx.amount).toLocaleString() }}
             </p>
           </div>
         </div>
       </div>
-
-      <!-- Footer -->
-      <div class="mt-10 text-center text-slate-500 text-sm">
-        <p>© 2025 Maimalee HR • Your financial wellness partner</p>
-      </div>
     </div>
-
-    <!-- Modals -->
-    <a-modal v-model:open="showWithdrawModal" title="Request Withdrawal" width="500px">
-      <p class="text-center text-slate-600 py-6">Feature coming soon!</p>
-    </a-modal>
-
-    <a-modal v-model:open="showDepositModal" title="Add Money" width="500px">
-      <p class="text-center text-slate-600 py-6">Manual deposit coming soon!</p>
-    </a-modal>
-
-    <a-modal v-model:open="showGoalModal" title="Set Savings Goal" width="500px">
-      <p class="text-center text-slate-600 py-6">Goal tracking coming soon!</p>
-    </a-modal>
   </div>
 </template>
 
@@ -136,7 +112,7 @@
 import { ref, onMounted, computed } from 'vue'
 import api from '~/utils/api'
 
-const wallet = ref({ balance: 0, monthly_savings: 0 })
+const wallet = ref({ balance: 0, monthly_savings: 0, goal_amount: 0, goal_name: '', goal_target_date: null })
 const transactions = ref<any[]>([])
 
 const showWithdrawModal = ref(false)
@@ -150,12 +126,14 @@ const nextDepositDate = computed(() => {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 })
 
-const formatDate = (date: string) => {
-  return new Date(date).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  })
+const goalProgress = computed(() => {
+  if (wallet.value.goal_amount <= 0) return 0
+  return Math.min(100, (wallet.value.balance / wallet.value.goal_amount) * 100)
+})
+
+const formatDate = (date: string | null) => {
+  if (!date) return '—'
+  return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 const fetchWallet = async () => {
@@ -171,9 +149,3 @@ const fetchWallet = async () => {
 
 onMounted(fetchWallet)
 </script>
-
-<style scoped>
-.max-w-6xl {
-  max-width: 1150px;
-}
-</style>
