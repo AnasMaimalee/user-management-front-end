@@ -93,7 +93,7 @@
                 <icon name="heroicons:user-20-solid" class="w-4 h-4 mr-2 text-blue-600" />
                 Profile
               </a-menu-item>
-              <a-menu-item @click="router.push('/settings')">
+              <a-menu-item @click="router.push('/setting/profile')">
                 <icon name="heroicons:cog-8-tooth-20-solid" class="w-4 h-4 mr-2 text-blue-600" />
                 Settings
               </a-menu-item>

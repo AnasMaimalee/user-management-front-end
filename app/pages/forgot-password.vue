@@ -4,7 +4,7 @@ import api from '~/utils/api'
 import { notification } from 'ant-design-vue'
 
 definePageMeta({
-  layout: 'auth',
+  layout: false,
   ssr: false
 })
 

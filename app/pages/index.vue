@@ -4,7 +4,8 @@ import { useAuthStore } from '~/stores/auth'
 import { notification } from 'ant-design-vue'
 
 definePageMeta({
-  layout: 'auth',
+  layout: false,
+  
 })
 
 const loading = ref(false)
