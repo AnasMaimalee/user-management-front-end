@@ -5,7 +5,7 @@ import { notification } from 'ant-design-vue'
 
 definePageMeta({
   layout: 'auth',
-  ssr: false  // Completely skip server render
+  ssr: false,
 })
 
 const loading = ref(false)
@@ -77,7 +77,6 @@ const login = async () => {
         :model="formState"
         @finish="login"
         layout="vertical"
-        class="space-y-4"
       >
         <a-form-item name="email">
           <a-input
@@ -95,6 +94,16 @@ const login = async () => {
             size="large"
           />
         </a-form-item>
+
+        <!-- Forgot password -->
+        <div class="text-right mb-4">
+          <NuxtLink
+            to="/forgot-password"
+            class="text-sm text-primary hover:underline"
+          >
+            Forgot password?
+          </NuxtLink>
+        </div>
 
         <a-form-item>
           <a-button
@@ -120,12 +129,12 @@ const login = async () => {
       <div class="text-center mt-2">
         <p class="text-gray-600">
           Don't have an account?
-          <router-link
+          <NuxtLink
             to="/"
             class="text-primary font-medium hover:underline"
           >
             Register here
-          </router-link>
+          </NuxtLink>
         </p>
       </div>
     </div>

@@ -20,12 +20,6 @@ export default defineNuxtPlugin(async () => {
     }
   )
 
-  // Fetch CSRF cookie on app load (required for POST/PUT/PATCH/DELETE)
-  try {
-    await api.get('/sanctum/csrf-cookie')
-  } catch (e) {
-    console.warn('Failed to fetch CSRF cookie')
-  }
 
   return {
     provide: {
