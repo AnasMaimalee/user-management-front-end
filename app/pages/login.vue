@@ -5,6 +5,7 @@ import { notification } from 'ant-design-vue'
 
 definePageMeta({
   layout: 'auth',
+  ssr: false  // Completely skip server render
 })
 
 const loading = ref(false)

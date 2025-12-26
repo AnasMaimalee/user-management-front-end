@@ -68,19 +68,7 @@
         </a-menu>
       </div>
 
-      <!-- Logout Button at Bottom -->
-      <div class="p-4 border-t border-gray-100">
-        <a-button
-          type="text"
-          danger
-          block
-          @click="logout"
-          class="flex items-center justify-center gap-4 hover:bg-red-50 transition rounded-lg py-3"
-        >
-          <icon name="heroicons:arrow-right-on-rectangle-20-solid" class="w-6 h-6 text-red-600" />
-          <span v-if="!collapsed" class="font-medium">Logout</span>
-        </a-button>
-      </div>
+      
     </aside>
 
     <!-- Main Content -->

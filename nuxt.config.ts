@@ -12,7 +12,8 @@ export default defineNuxtConfig({
 
   plugins: [
     '~/plugins/axios.client.ts',
-    '~/plugins/antdv.client'
+    '~/plugins/antdv.client',
+    '~/plugins/api.client.ts'
     
   ],
    modules: [
@@ -26,3 +27,4 @@ export default defineNuxtConfig({
 
   
 });
+
