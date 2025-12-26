@@ -51,9 +51,12 @@
         <!-- Dates -->
         <template v-else-if="column.key === 'dates'">
           <div class="text-sm">
-            <div>{{ formatDate(record.start_date) }} → {{ formatDate(record.end_date) }}</div>
+            <div>
+              {{ formatDate(record.start_date) }} →
+              {{ formatDate(record.end_date) }}
+            </div>
             <div class="text-xs text-slate-500 mt-1">
-              Resume: {{ formatDate(record.resume_date) || '—' }}
+              Resume: {{ formatDate(record.resume_date) }}
             </div>
           </div>
         </template>
@@ -66,16 +69,6 @@
         <!-- Status -->
         <template v-else-if="column.key === 'status'">
           <a-tag :color="statusColor(record.status)">
-            <template #icon>
-              <span
-                class="w-2 h-2 rounded-full inline-block mr-1"
-                :class="{
-                  'bg-green-500': record.status === 'approved',
-                  'bg-red-500': record.status === 'rejected',
-                  'bg-orange-500': record.status === 'pending'
-                }"
-              ></span>
-            </template>
             {{ statusText(record.status) }}
           </a-tag>
         </template>
@@ -87,26 +80,30 @@
             trigger="click"
           >
             <a-button type="text" size="small">
-              <ellipsis-outlined class="text-lg text-slate-600 hover:text-slate-900 transition" />
+              <EllipsisOutlined class="text-lg" />
             </a-button>
+
             <template #overlay>
-              <a-menu class="shadow-lg">
-                <a-menu-item @click="openStatusModal(record, 'approved')" class="flex items-center">
-                  <check-circle-outlined class="mr-2 text-green-600" /> Approve
+              <a-menu>
+                <a-menu-item @click="openStatusModal(record, 'approved')">
+                  <CheckCircleOutlined class="mr-2 text-green-600" />
+                  Approve
                 </a-menu-item>
-                <a-menu-item @click="openStatusModal(record, 'rejected')" class="flex items-center text-red-600">
-                  <close-circle-outlined class="mr-2" /> Reject
+
+                <a-menu-item @click="openStatusModal(record, 'rejected')">
+                  <CloseCircleOutlined class="mr-2 text-red-600" />
+                  Reject
                 </a-menu-item>
               </a-menu>
             </template>
           </a-dropdown>
 
-          <span v-else class="text-slate-400 text-sm">—</span>
+          <span v-else class="text-slate-400">—</span>
         </template>
       </template>
     </a-table>
 
-    <!-- Status Update Modal -->
+    <!-- Status Modal -->
     <a-modal
       v-model:open="statusModal.visible"
       :title="modalTitle"
@@ -117,36 +114,27 @@
       width="520px"
       :ok-button-props="okButtonProps"
     >
-      <div class="mb-5">
-        <p class="text-slate-700 leading-relaxed">
-          <strong>{{ fullName(statusModal.record?.employee) }}</strong> requested leave from
-          <strong>{{ formatDate(statusModal.record?.start_date) }}</strong> to
-          <strong>{{ formatDate(statusModal.record?.end_date) }}</strong>.
-        </p>
-        <p class="text-slate-600 mt-3">
-          <strong>Reason:</strong>
-          <span class="ml-2 italic">{{ statusModal.record?.reason || 'No reason provided' }}</span>
-        </p>
-      </div>
+      <p class="mb-4 text-slate-700">
+        <strong>{{ fullName(statusModal.record?.employee) }}</strong>
+        requested leave from
+        <strong>{{ formatDate(statusModal.record?.start_date) }}</strong>
+        to
+        <strong>{{ formatDate(statusModal.record?.end_date) }}</strong>
+      </p>
 
       <a-form layout="vertical">
         <a-form-item
           :label="noteLabel"
-          :help="noteHelp"
           :validate-status="noteError ? 'error' : ''"
-          :has-feedback="!!noteError"
+          :help="noteError || noteHelp"
         >
           <a-textarea
             v-model:value="statusModal.note"
-            :placeholder="notePlaceholder"
             :rows="4"
-            :max-length="255"
+            :placeholder="notePlaceholder"
             show-count
-            @input="noteError = ''"
+            :max-length="255"
           />
-          <div v-if="noteError" class="ant-form-item-explain-error text-red-600 text-sm mt-1">
-            {{ noteError }}
-          </div>
         </a-form-item>
       </a-form>
     </a-modal>
@@ -154,29 +142,26 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
+import dayjs from 'dayjs'
 import api from '~/utils/api'
+import { useUserStore } from '~/stores/user'
 import {
   EllipsisOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
 } from '@ant-design/icons-vue'
-import { useUserStore } from '~/stores/user'
-import dayjs from 'dayjs'
-// At the top of <script setup>
-const { $message } = useNuxtApp()  // ← This works reliably
-// ← CORRECT: Get notification from Nuxt app context
-const { $notification } = useNuxtApp()
+import { notification } from 'ant-design-vue'
+
 
 const userStore = useUserStore()
 await userStore.fetchUser()
 
 const leaves = ref<any[]>([])
-const error = ref<string | null>(null)
 const loading = ref(false)
-const noteError = ref<string>('')
+const error = ref<string | null>(null)
+const noteError = ref('')
 
-// Modal state
 const statusModal = reactive({
   visible: false,
   loading: false,
@@ -185,83 +170,65 @@ const statusModal = reactive({
   note: '',
 })
 
-// Computed modal properties
-const modalTitle = computed(() => {
-  return statusModal.action === 'approved'
+const columns = [
+  { title: '#', key: 'index', width: 60 },
+  { title: 'Employee', key: 'employee', width: 260 },
+  { title: 'Dates', key: 'dates', width: 220 },
+  { title: 'Reason', key: 'reason' },
+  { title: 'Status', key: 'status', width: 120 },
+  { title: 'Actions', key: 'actions', width: 100 },
+]
+
+const modalTitle = computed(() =>
+  statusModal.action === 'approved'
     ? 'Approve Leave Request'
     : 'Reject Leave Request'
-})
+)
 
 const okButtonProps = computed(() => ({
-  type: statusModal.action === 'approved' ? 'primary' : 'default',
   danger: statusModal.action === 'rejected',
 }))
 
-const noteLabel = computed(() => {
-  return statusModal.action === 'rejected' ? 'Admin Note (Required)' : 'Admin Note (Optional)'
-})
+const noteLabel = computed(() =>
+  statusModal.action === 'rejected'
+    ? 'Admin Note (Required)'
+    : 'Admin Note (Optional)'
+)
 
-const noteHelp = computed(() => {
-  return statusModal.action === 'rejected'
-    ? 'Please provide a reason for rejection (min. 10 characters)'
-    : 'You may add a note for the employee'
-})
+const noteHelp = computed(() =>
+  statusModal.action === 'rejected'
+    ? 'Minimum 10 characters required'
+    : 'Optional message for employee'
+)
 
-const notePlaceholder = computed(() => {
-  return statusModal.action === 'rejected'
-    ? 'Explain why this leave is being rejected...'
-    : 'Add a friendly note (e.g., Enjoy your time off!)'
-})
+const notePlaceholder = computed(() =>
+  statusModal.action === 'rejected'
+    ? 'Explain why this leave is rejected...'
+    : 'Optional note'
+)
 
-const columns = [
-  { title: '#', key: 'index', width: 70, fixed: 'left' },
-  { title: 'Employee', key: 'employee', width: 280 },
-  { title: 'Dates', key: 'dates', width: 240 },
-  { title: 'Reason', key: 'reason' },
-  { title: 'Status', key: 'status', width: 140 },
-  { title: 'Actions', key: 'actions', width: 100, fixed: 'right' },
-]
+const fullName = (e: any) =>
+  e ? `${e.first_name || ''} ${e.last_name || ''}`.trim() : 'Unknown'
 
-// Helpers
-const fullName = (employee: any) => {
-  if (!employee) return 'Unknown'
-  return `${employee.first_name || ''} ${employee.last_name || ''}`.trim() || 'Unknown'
-}
+const getInitials = (e: any) =>
+  e ? `${e.first_name?.[0] || ''}${e.last_name?.[0] || ''}`.toUpperCase() : 'NA'
 
-const getInitials = (employee: any) => {
-  if (!employee) return 'NA'
-  const first = employee.first_name?.[0] || ''
-  const last = employee.last_name?.[0] || ''
-  return (first + last).toUpperCase() || 'NA'
-}
+const formatDate = (d: string | null) =>
+  d ? dayjs(d).format('MMM D, YYYY') : '—'
 
-const formatDate = (date: string | null) => {
-  return date ? dayjs(date).format('MMM D, YYYY') : '—'
-}
+const statusText = (s: string) =>
+  s ? s.charAt(0).toUpperCase() + s.slice(1) : '—'
 
-const statusText = (status: string) => {
-  if (!status) return 'UNKNOWN'
-  return status.charAt(0).toUpperCase() + status.slice(1)
-}
-
-const statusColor = (status: string) => {
-  switch (status) {
-    case 'approved': return 'green'
-    case 'rejected': return 'volcano'
-    case 'pending': return 'orange'
-    default: return 'default'
-  }
-}
+const statusColor = (s: string) =>
+  s === 'approved' ? 'green' : s === 'rejected' ? 'volcano' : 'orange'
 
 const fetchLeaves = async () => {
   loading.value = true
   try {
     const res = await api.get('/leaves')
     leaves.value = res.data
-    error.value = null
-  } catch (err: any) {
-    console.error('Fetch leaves error:', err)
-    error.value = err.response?.data?.message || 'Failed to load leave requests'
+  } catch (e: any) {
+    error.value = e.response?.data?.message || 'Failed to load leaves'
   } finally {
     loading.value = false
   }
@@ -297,45 +264,39 @@ const handleStatusUpdate = async () => {
       admin_note: statusModal.note.trim() || null,
     })
 
-    message.success({
-      content: `Leave request ${
-        statusModal.action === 'approved' ? 'approved' : 'rejected'
-      } successfully!`,
-      duration: 4,
+    notification.success({
+      message: 'Success',
+      description: `Leave request has been ${statusModal.action} successfully`,
+      placement: 'topRight',
     })
 
     statusModal.visible = false
     fetchLeaves()
   } catch (err: any) {
-    console.error('Update error:', err)
-
     let errorMessage = 'Failed to update leave status'
+
     if (err.response?.data?.message) {
       errorMessage = err.response.data.message
-    } else if (!err.response) {
-      errorMessage = 'Network error. Please check your connection.'
     }
 
-    message.error({
-      content: errorMessage,
-      duration: 5,
+    notification.error({
+      message: 'Error',
+      description: errorMessage,
+      placement: 'topRight',
     })
   } finally {
     statusModal.loading = false
   }
 }
 
+
+
 onMounted(fetchLeaves)
 </script>
 
 <style scoped>
 :deep(.ant-table-thead > tr > th) {
-  background-color: #f1f5f9 !important;
+  background: #f1f5f9;
   font-weight: 600;
-  color: #334155;
-}
-
-:deep(.ant-table-tbody > tr:hover > td) {
-  background-color: #f8fafc !important;
 }
 </style>
