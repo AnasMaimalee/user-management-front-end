@@ -1,6 +1,5 @@
 <template>
   <div class="min-h-screen flex bg-gray-50">
-
     <!-- Sidebar -->
     <aside
       :class="[
@@ -16,16 +15,15 @@
           </div>
           <span v-if="!collapsed" class="font-bold text-xl text-gray-800">Maimalee</span>
         </div>
-        <!-- Toggle Button - Blue icon -->
         <a-button @click="collapsed = !collapsed" type="text" class="text-blue-600 hover:text-blue-700">
-          <icon 
-            :name="collapsed ? 'heroicons:chevron-right-20-solid' : 'heroicons:chevron-left-20-solid'" 
+          <component
+            :is="collapsed ? ChevronRightOutlined : ChevronLeftOutlined"
             class="w-5 h-5"
           />
         </a-button>
       </div>
 
-      <!-- User Info Section (Hidden when collapsed) -->
+      <!-- User Info (Hidden when collapsed) -->
       <div v-if="!collapsed" class="px-5 py-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
         <div class="flex items-center gap-4">
           <a-avatar size="large" style="background-color:#1677ff" class="shadow-md">
@@ -55,20 +53,17 @@
             :class="currentRoute === menu.route ? 'bg-blue-50 text-blue-600 font-medium' : 'hover:bg-gray-100'"
           >
             <div class="flex items-center gap-4">
-              <!-- All icons: Blue by default -->
-              <icon
-                :name="menu.icon || 'heroicons:cube-20-solid'"
-                class="w-6 h-6 flex-shrink-0 text-blue-600"
-                :class="currentRoute === menu.route ? 'text-blue-700' : 'group-hover:text-blue-700'"
+              <!-- Dynamic Ant Design Icon from backend -->
+              <component
+                :is="iconComponents[menu.icon] || BoxPlotOutlined"
+                class="w-6 h-6 flex-shrink-0 text-blue-600 group-hover:text-blue-700"
+                :class="currentRoute === menu.route ? 'text-blue-700' : ''"
               />
-              <!-- Title (Hidden when collapsed) -->
-              <span class="text-base truncate">{{ menu.title }}</span>
+              <span v-if="!collapsed" class="text-base truncate">{{ menu.title }}</span>
             </div>
           </a-menu-item>
         </a-menu>
       </div>
-
-      
     </aside>
 
     <!-- Main Content -->
@@ -77,30 +72,27 @@
       <header class="h-16 bg-white shadow-sm flex items-center justify-between px-8 border-b border-gray-200">
         <h1 class="text-2xl font-semibold text-gray-800 capitalize">{{ currentPageTitle }}</h1>
 
-        <!-- User Dropdown (Top Right) -->
+        <!-- User Dropdown -->
         <a-dropdown placement="bottomRight">
           <div class="flex items-center gap-3 cursor-pointer px-4 py-2 rounded-lg hover:bg-gray-100 transition">
             <a-avatar size="default" style="background-color:#1677ff">
               {{ firstName.charAt(0).toUpperCase() }}
             </a-avatar>
-            <div class="hidden md:block mt-4">
+            <div class="hidden md:block">
               <p class="font-medium text-gray-800">{{ firstName }}</p>
             </div>
           </div>
           <template #overlay>
             <a-menu class="shadow-lg">
               <a-menu-item @click="router.push('/profile')">
-                <icon name="heroicons:user-20-solid" class="w-4 h-4 mr-2 text-blue-600" />
-                Profile
+                <UserOutlined class="mr-2" /> Profile
               </a-menu-item>
               <a-menu-item @click="router.push('/setting/profile')">
-                <icon name="heroicons:cog-8-tooth-20-solid" class="w-4 h-4 mr-2 text-blue-600" />
-                Settings
+                <SettingOutlined class="mr-2" /> Settings
               </a-menu-item>
               <a-menu-divider />
               <a-menu-item danger @click="logout">
-                <icon name="heroicons:arrow-right-on-rectangle-20-solid" class="w-4 h-4 mr-2 text-red-600" />
-                Logout
+                <LogoutOutlined class="mr-2" /> Logout
               </a-menu-item>
             </a-menu>
           </template>
@@ -125,6 +117,29 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '~/stores/auth'
 
+// Import ALL needed Ant Design icons
+import {
+  HomeOutlined,
+  UserOutlined,
+  UsergroupAddOutlined,
+  ApartmentOutlined,
+  ProfileOutlined,
+  BankOutlined,
+  SettingOutlined,
+  LogoutOutlined,
+  WalletOutlined,
+  MoneyCollectOutlined,
+  DollarOutlined,
+  PieChartOutlined,
+  BarChartOutlined,
+  CalendarOutlined,
+  NotificationOutlined,
+  BoxPlotOutlined,
+  LeftOutlined,
+  RightOutlined,
+} from '@ant-design/icons-vue'
+
+
 const auth = useAuthStore()
 const router = useRouter()
 const route = useRoute()
@@ -146,40 +161,51 @@ const currentPageTitle = computed(() => {
   if (path.startsWith('/departments')) return 'Departments'
   if (path.startsWith('/ranks')) return 'Job Ranks'
   if (path.startsWith('/branches')) return 'Branches'
+  if (path.startsWith('/wallet')) return 'My Wallet'
   return 'Dashboard'
 })
 
-// Map backend icon strings to nuxt-icon names (blue theme)
-const menuIconMap: Record<string, string> = {
-  HomeOutlined: 'heroicons:home-20-solid',
-  Dashboard: 'heroicons:chart-pie-20-solid',
-  Employees: 'heroicons:user-group-20-solid',
-  Departments: 'heroicons:building-office-2-20-solid',
-  Ranks: 'heroicons:academic-cap-20-solid',
-  Branches: 'heroicons:map-pin-20-solid',
-  Settings: 'heroicons:cog-8-tooth-20-solid',
-  Profile: 'heroicons:user-20-solid',
+// Map backend icon names to Ant Design Vue components
+const iconComponents: Record<string, any> = {
+  HomeOutlined,
+  UserOutlined,
+  UsergroupAddOutlined,
+  ApartmentOutlined,
+  ProfileOutlined,
+  BankOutlined,
+  SettingOutlined,
+  LogoutOutlined,
+  WalletOutlined,
+  MoneyCollectOutlined,
+  DollarOutlined,
+  PieChartOutlined,
+  BarChartOutlined,
+  CalendarOutlined,
+  NotificationOutlined,
+  BoxPlotOutlined,
+  // Add more as needed
 }
 
 const defaultMenus = [
-  { title: 'Dashboard', route: '/dashboard', icon: 'heroicons:home-20-solid' },
+  { title: 'Dashboard', route: '/dashboard', icon: 'HomeOutlined' },
 ]
+
 const menus = computed(() => {
   const backendMenus = auth.user?.menus || []
 
-  // Only show items allowed for this user's role
   const role = auth.user?.role
   const filteredMenus = backendMenus.filter((menu: any) => {
-    if (!menu.roles) return true // show if roles not defined
+    if (!menu.roles) return true
     return menu.roles.includes(role)
   })
 
   return [...defaultMenus, ...filteredMenus.map((menu: any) => ({
     title: menu.title,
     route: menu.route,
-    icon: menuIconMap[menu.icon] || menuIconMap[menu.title] || 'heroicons:cube-20-solid',
+    icon: menu.icon || 'BoxPlotOutlined', // fallback
   }))]
 })
+
 const navigate = (path: string) => {
   if (route.path !== path) {
     router.push(path)
@@ -199,35 +225,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Force ALL icons to blue - Maximum priority */
-:deep(.icon),
-:deep(svg) {
-  color: #1677ff !important;
-  fill: #1677ff !important;
-}
-
-/* Active darker blue */
-:deep(.ant-menu-item-selected .icon),
-:deep(.ant-menu-item-selected svg) {
-  color: #1d4ed8 !important;
-  fill: #1d4ed8 !important;
-}
-
-/* Hover darker blue */
-:deep(.ant-menu-item:hover .icon),
-:deep(.ant-menu-item:hover svg) {
-  color: #1d4ed8 !important;
-  fill: #1d4ed8 !important;
-}
-
-/* Toggle button icon */
-:deep(.ant-btn .icon),
-:deep(.ant-btn svg) {
-  color: #1677ff !important;
-  fill: #1677ff !important;
-}
-
-/* Active menu item */
+/* Active menu item styling */
 :deep(.ant-menu-item-selected) {
   background-color: #e6f4ff !important;
   color: #1677ff !important;
@@ -235,8 +233,22 @@ onMounted(() => {
   font-weight: 500;
 }
 
+:deep(.ant-menu-item-selected .anticon) {
+  color: #1677ff !important;
+}
+
 /* Hover effect */
 :deep(.ant-menu-item:hover:not(.ant-menu-item-selected)) {
   background-color: #f0f9ff !important;
+  color: #1677ff !important;
+}
+
+:deep(.ant-menu-item:hover .anticon) {
+  color: #1677ff !important;
+}
+
+/* Icons in dropdown */
+:deep(.anticon) {
+  color: #1677ff;
 }
 </style>
