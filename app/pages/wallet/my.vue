@@ -160,7 +160,7 @@
       </div>
     </div>
 
-    <!-- Concise Withdrawal Modal -->
+    <!-- Withdrawal Modal -->
     <a-modal v-model:open="showWithdrawModal" title="Request Withdrawal" width="500px">
       <div class="text-center mb-6">
         <p class="text-slate-600">Available Balance</p>
@@ -193,7 +193,7 @@
       </template>
     </a-modal>
 
-    <!-- Set Savings Goal Modal with Full Validation -->
+    <!-- Goal Modal -->
     <a-modal
       v-model:open="showGoalModal"
       :title="wallet.goal_amount > 0 ? 'Update Savings Goal' : 'Create Savings Goal'"
@@ -252,7 +252,6 @@
     <!-- Goal Achievement Celebration -->
     <a-modal v-model:open="showAchievement" :footer="null" width="500px" :closable="false">
       <div class="text-center py-10">
-        <confetti-explosion />
         <div class="text-7xl mb-6">🎉</div>
         <h2 class="text-3xl font-bold text-success mb-4">Goal Achieved!</h2>
         <p class="text-xl text-slate-700 mb-8">
@@ -271,7 +270,6 @@ import { ref, onMounted, computed, watch, reactive } from 'vue'
 import api from '~/utils/api'
 import { notification } from 'ant-design-vue'
 import { EditOutlined } from '@ant-design/icons-vue'
-import ConfettiExplosion from 'vue-confetti-explosion'
 import type { FormInstance } from 'ant-design-vue'
 
 const wallet = ref({

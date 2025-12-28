@@ -25,13 +25,12 @@ export const useAuthStore = defineStore('auth', {
     async fetchUser() {
       try {
         const res = await api.get('/me')
-
-        this.user = {
-          ...res.data.user,
-          roles: res.data.roles,
-          permissions: res.data.permissions,
-          menus: res.data.menus,
-        }
+              this.user = {
+        ...res.data.user,
+        roles: res.data.roles, // ← array of roles
+        permissions: res.data.permissions,
+        menus: res.data.menus,
+      }
       } catch (err) {
         console.error('Auth expired')
         this.logout()
