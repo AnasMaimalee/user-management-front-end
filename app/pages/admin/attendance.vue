@@ -57,7 +57,6 @@ const closeDrawer = () => {
     />
 
     <!-- ===== HISTORY ===== -->
-    <AttendanceHistory />
 
     <!-- ===== EMPLOYEE DRAWER ===== -->
     <EmployeeAttendanceDrawer
