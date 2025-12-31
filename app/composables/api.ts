@@ -1,5 +1,5 @@
 // composables/api.ts
-import { $fetch } from 'ohmyfetch'
+import { ofetch } from 'ofetch'
 
 export const api = $fetch.create({
   baseURL: 'http://172.24.24.69:8000/api', // your PC IP + Laravel port

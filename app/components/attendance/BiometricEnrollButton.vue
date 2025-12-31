@@ -1,47 +1,55 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { message } from 'ant-design-vue'
-import { useBiometricEnrollmentService } from '~/composables/services/useBiometricEnrollmentService'
+import { ref } from 'vue'
+import { message, Modal } from 'ant-design-vue'
 
 const props = defineProps<{
   employeeId: string
-  biometricUid?: string | null
 }>()
 
+const emit = defineEmits(['success'])
+
 const loading = ref(false)
-const { enroll } = useBiometricEnrollmentService()
 
-const isEnrolled = computed(() => !!props.biometricUid)
+const enroll = async () => {
+  Modal.confirm({
+    title: 'Enroll Employee',
+    content: 'Make sure the employee is physically present at the biometric device.',
+    okText: 'Start Enrollment',
+    cancelText: 'Cancel',
+    async onOk() {
+      loading.value = true
+      try {
+        await $fetch('/api/biometric/enroll', {
+          method: 'POST',
+          body: { employee_id: props.employeeId },
+          headers: {
+            // Ensure auth if needed
+            Authorization: `Bearer ${useCookie('auth_token').value || ''}`
+          }
+        })
 
-const handleEnroll = async () => {
-  loading.value = true
-
-  const { error } = await enroll(props.employeeId)
-
-  loading.value = false
-
-  if (error.value) {
-    message.error(error.value.data?.message || 'Enrollment failed')
-    return
-  }
-
-  message.success(
-    'Employee sent to biometric device. Ask employee to scan fingerprint.'
-  )
+        message.success('Enrollment started successfully')
+        emit('success')
+      } catch (err: any) {
+        console.error('Enrollment error:', err)
+        const msg = err?.data?.message || err?.message || 'Enrollment failed. Please try again.'
+        message.error(msg)
+      } finally {
+        loading.value = false
+      }
+    },
+  })
 }
 </script>
 
 <template>
   <a-button
-    v-if="!isEnrolled"
     type="primary"
     :loading="loading"
-    @click="handleEnroll"
+    @click="enroll"
   >
-    Enroll Biometrics
+    Enroll Biometric
   </a-button>
-
-  <a-tag v-else color="green">
-    Enrolled
-  </a-tag>
 </template>
+
+    :disabled="!props.employeeId"

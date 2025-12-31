@@ -11,6 +11,18 @@ export default defineNuxtConfig({
     ],
   },
 
+  routeRules: {
+    // Proxy all API calls to Laravel
+    '/api/**': { 
+      proxy: 'http://172.24.24.69:8000/api/**' 
+    },
+
+    // Important: also proxy Sanctum CSRF endpoint
+    '/sanctum/csrf-cookie': { 
+      proxy: 'http://172.24.24.69:8000/sanctum/csrf-cookie' 
+    },
+  },
+  
   runtimeConfig: {
     public: {
       pusherAppKey: process.env.PUBLIC_PUSHER_APP_KEY,

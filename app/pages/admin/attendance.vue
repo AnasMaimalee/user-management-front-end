@@ -1,5 +1,16 @@
 <script setup lang="ts">
 
+import TodayAttendanceTable from '~/components/attendance/TodayAttendanceTable.vue'
+import AttendanceStats from '~/components/attendance/AttendanceStats.vue'
+import AttendanceChart from '~/components/attendance/AttendanceChart.vue'
+import AttendanceFilters from '~/components/attendance/AttendanceFilters.vue'
+import BiometricEnrollButton from '~/components/attendance/BiometricEnrollButton.vue'
+import BiometricResetButton from '~/components/biometric/BiometricResetButton.vue'
+import AttendanceExport from '~/components/attendance/AttendanceExport.vue'
+import BiometricStatus from '~/components/biometric/BiometricStatus.vue'
+import AttendanceHistory from '~/components/attendance/AttendanceHistory.vue'
+import EmployeeAttendanceDrawer from '~/components/attendance/EmployeeAttendanceDrawer.vue'
+
 const selectedEmployee = ref<any | null>(null)
 const drawerVisible = ref(false)
 
