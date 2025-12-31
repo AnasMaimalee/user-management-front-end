@@ -11,10 +11,12 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@ant-design/charts": "^2.6.7",
     "@pinia/nuxt": "^0.11.3",
     "@tailwindcss/vite": "^4.1.18",
     "ant-design-vue": "^4.2.6",
     "axios": "^1.13.2",
+    "chart.js": "^4.5.1",
     "laravel-echo": "^2.2.7",
     "nuxt": "^4.2.2",
     "pinia": "^3.0.4",
@@ -22,6 +24,7 @@
     "pusher-js": "^8.4.0",
     "tailwindcss": "^4.1.18",
     "vue": "^3.5.25",
+    "vue-chartjs": "^5.3.3",
     "vue-confetti-explosion": "^1.0.2",
     "vue-router": "^4.6.4"
   },

@@ -1,38 +1,67 @@
 <template>
-  <div class="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+  <div class="h-full overflow-y-auto px-3 py-4 space-y-2 bg-[url('/whatsapp-bg.png')] bg-repeat bg-gray-100">
     <div
       v-for="msg in chat.messages"
       :key="msg.id"
-      class="flex gap-3"
+      :class="[
+        'flex max-w-[75%]',
+        isOwnMessage(msg) ? 'ml-auto' : 'mr-auto'
+      ]"
     >
-      <a-avatar style="background:#1677ff">
-        {{ senderInitial(msg) }}
-      </a-avatar>
-
-      <div>
-        <p class="font-medium text-gray-800">
+      <div
+        :class="[
+          'px-4 py-2 rounded-2xl relative',
+          isOwnMessage(msg)
+            ? 'bg-[#dcf8c6] rounded-tr-none' 
+            : 'bg-white rounded-tl-none shadow-sm'
+        ]"
+      >
+        <!-- Sender name only for incoming -->
+        <p v-if="!isOwnMessage(msg)" class="text-xs font-medium text-[#075e54] mb-1">
           {{ senderName(msg) }}
         </p>
-        <p class="text-gray-700">
-          {{ msg.message }}
-        </p>
-        <p class="text-xs text-gray-400 mt-1">
-          {{ new Date(msg.created_at).toLocaleTimeString() }}
-        </p>
+
+        <p class="text-base">{{ msg.message }}</p>
+
+        <!-- Time + Status (bottom right) -->
+        <div class="flex items-center justify-end gap-1 mt-1">
+          <span class="text-xs text-gray-500">{{ formatTime(msg.created_at) }}</span>
+          <span v-if="isOwnMessage(msg)" class="text-xs">
+            <span class="text-blue-600">{{ msg.seen_at ? '✓✓' : '✓' }}</span>
+          </span>
+        </div>
+
+        <!-- Tail (WhatsApp-style) -->
+        <div
+          :class="[
+            'absolute w-3 h-3 bottom-0',
+            isOwnMessage(msg)
+              ? 'right-0 bg-[#dcf8c6] -mr-1 rotate-45 translate-x-1/2'
+              : 'left-0 bg-white -ml-1 -rotate-45 -translate-x-1/2'
+          ]"
+        />
       </div>
+    </div>
+
+    <!-- Empty state -->
+    <div v-if="!chat.messages.length" class="text-center text-gray-500 mt-20">
+      <p class="text-lg">No messages yet</p>
+      <p class="text-sm">Start the conversation!</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
 import { useChatStore } from '~/stores/chat'
+import { useAuthStore } from '~/stores/auth'
 
 const chat = useChatStore()
+const auth = useAuthStore()
 
-onMounted(() => {
-  chat.fetchMessages()
-})
+const isOwnMessage = (msg: any) => {
+  const userId = auth.user?.id
+  return userId && (msg.user?.id === userId || msg.employee?.user_id === userId)
+}
 
 const senderName = (msg: any) => {
   if (msg.user) return msg.user.name
@@ -40,16 +69,13 @@ const senderName = (msg: any) => {
   return 'Unknown'
 }
 
-const senderInitial = (msg: any) => {
-  return senderName(msg).charAt(0).toUpperCase()
+const formatTime = (time: string) => {
+  return new Date(time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
-
-$echo.channel('company-chat')
-  .listen('.chat.message.seen', (e: any) => {
-    const msg = chat.messages.find(m => m.id === e.message.id)
-    if (msg) {
-      msg.seen_at = e.message.seen_at
-    }
-  })
-
 </script>
+
+<style scoped>
+/* Hide scrollbar */
+.h-full { scrollbar-width: none; }
+.h-full::-webkit-scrollbar { display: none; }
+</style>

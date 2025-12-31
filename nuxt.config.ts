@@ -1,4 +1,5 @@
 import tailwindcss from "@tailwindcss/vite";
+import 'process'
 
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
@@ -10,9 +11,19 @@ export default defineNuxtConfig({
     ],
   },
 
+  runtimeConfig: {
+    public: {
+      pusherAppKey: process.env.PUBLIC_PUSHER_APP_KEY,
+      pusherCluster: process.env.PUBLIC_PUSHER_CLUSTER,
+      apiBase: process.env.PUBLIC_API_BASE,
+    },
+  },
+
   plugins: [
     '~/plugins/axios.client.ts',
     '~/plugins/antdv.client',
+    '~/plugins/echo.client.ts'
+   
     
   ],
    modules: [
