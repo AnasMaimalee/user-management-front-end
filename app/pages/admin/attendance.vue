@@ -58,6 +58,7 @@
           <div class="bg-white rounded-2xl shadow-lg p-6 space-y-4">
             <h3 class="text-lg font-semibold text-slate-800 mb-4">Actions</h3>
             <BiometricResetButton class="w-full" />
+            <div class="mt-2"></div>
             <AttendanceExport class="w-full" />
           </div>
 
@@ -73,10 +74,10 @@
                 {{ filterActive ? 'Filtered Attendance' : "Today's Attendance" }}
               </h2>
 
-              <!-- Filter -->
               <AttendanceFilters @filter-change="handleFilterChange" />
             </div>
 
+            <!-- Table with NO HORIZONTAL SCROLL -->
             <TodayAttendanceTable 
               :filter="activeFilter"
               @open-employee="openEmployeeDrawer"
@@ -158,7 +159,6 @@ const handleFilterChange = (filter: { from: string; to: string } | null) => {
   filterActive.value = !!filter
 }
 
-// Realtime punch listener
 onMounted(() => {
   $echo.private('biometric.punch')
     .listen('.fingerprint.scanned', async (e: any) => {
@@ -179,6 +179,11 @@ onMounted(() => {
         }
 
         message.success(`${name} ${action}!`)
+
+        const audio = new Audio('/beep.mp3')
+        audio.play().catch(() => {
+          console.log('Beep sound blocked (user needs to interact first)')
+        })
       } catch (err: any) {
         message.error(err.response?.data?.message || 'Scan failed')
       }
