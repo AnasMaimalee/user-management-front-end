@@ -5,7 +5,6 @@ import { notification } from 'ant-design-vue'
 
 definePageMeta({
   layout: false,
-  ssr: false,
 })
 
 const loading = ref(false)

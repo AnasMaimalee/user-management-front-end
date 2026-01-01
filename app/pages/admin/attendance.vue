@@ -1,7 +1,7 @@
 <!-- pages/admin/attendance/index.vue -->
 <template>
   <div class="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50">
-    <div class="max-w-7xl px-4 py-6 lg:px-6 lg:py-8">
+    <div class="w-full px-4 py-6 lg:px-6 lg:py-8">
       <!-- Header -->
       <div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
         <div>
@@ -10,10 +10,22 @@
         </div>
 
         <div class="flex items-center gap-4 mt-4 md:mt-0">
-          <div class="flex items-center gap-2">
-            <div class="w-3 h-3 rounded-full" :class="scannerActive ? 'bg-green-500 animate-pulse' : 'bg-gray-400'"></div>
+          <div class="flex items-center gap-3">
+            <!-- Heartbeat Blinking Indicator -->
+            <div class="relative">
+              <div class="w-4 h-4 rounded-full bg-gray-400 transition-all duration-300"
+                   :class="{
+                     'bg-green-500 shadow-green-500/50': scannerActive,
+                     'heartbeat': scannerActive
+                   }">
+              </div>
+              <!-- Extra glow ring for heartbeat effect -->
+              <div v-if="scannerActive"
+                   class="absolute inset-0 w-4 h-4 rounded-full bg-green-500 animate-ping opacity-75">
+              </div>
+            </div>
             <span class="text-sm font-medium text-slate-700">
-              {{ scannerActive ? 'Scanner Active' : 'Scanner Ready' }}
+              {{ scannerActive ? 'Scanner Active • Reading...' : 'Scanner Ready' }}
             </span>
           </div>
         </div>
@@ -59,7 +71,6 @@
             <h3 class="text-lg font-semibold text-slate-800 mb-4">Actions</h3>
             <BiometricResetButton class="w-full" />
             <div class="mt-2"></div>
-            <AttendanceExport class="w-full" />
           </div>
 
           <!-- Stats -->
@@ -74,7 +85,6 @@
                 {{ filterActive ? 'Filtered Attendance' : "Today's Attendance" }}
               </h2>
 
-              <AttendanceFilters @filter-change="handleFilterChange" />
             </div>
 
             <!-- Table with NO HORIZONTAL SCROLL -->
@@ -196,7 +206,30 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+
+
 .transition-shadow {
   transition: box-shadow 0.3s ease;
+}
+
+/* Heartbeat Animation - Beautiful pulsing effect */
+@keyframes heartbeat {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  }
+  70% {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+}
+
+.heartbeat {
+  animation: heartbeat 1.5s ease-in-out infinite;
+  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
 }
 </style>
