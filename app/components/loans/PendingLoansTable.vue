@@ -238,6 +238,8 @@ const fetchPending = async () => {
   }
 }
 
+defineExpose({ fetchPending })
+
 const resetFilters = () => {
   filterEmployee.value = null
   filterDepartment.value = null

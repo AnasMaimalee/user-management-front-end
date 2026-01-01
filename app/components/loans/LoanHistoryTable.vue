@@ -239,6 +239,8 @@ const fetchHistory = async () => {
   }
 }
 
+defineExpose({ fetchHistory })
+
 const exportPDF = async () => {
   exportingPDF.value = true
   try {
