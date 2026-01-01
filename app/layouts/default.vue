@@ -135,7 +135,9 @@ import {
   CalendarOutlined,
   NotificationOutlined,
   BoxPlotOutlined,
-  FieldTimeOutlined
+  FieldTimeOutlined,
+  ClockCircleOutlined,
+  ScanOutlined
   
 } from '@ant-design/icons-vue'
 
@@ -183,7 +185,9 @@ const iconComponents: Record<string, any> = {
   CalendarOutlined,
   NotificationOutlined,
   BoxPlotOutlined,
-  FieldTimeOutlined
+  FieldTimeOutlined,
+  ClockCircleOutlined,
+  ScanOutlined
   // Add more as needed
 }
 

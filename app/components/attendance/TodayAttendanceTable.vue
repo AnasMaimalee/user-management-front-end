@@ -2,14 +2,9 @@
 <template>
   <div class="p-6 bg-slate-100 min-h-screen">
     <!-- Header -->
-    <div class="flex justify-between items-center mb-8">
-      <div>
-        <h1 class="text-3xl font-bold text-slate-800">Today's Attendance</h1>
-        <p class="text-slate-600 mt-1">December 31, 2025</p>
-      </div>
-
+    
       <!-- You can add a global "Manual Record All" button here later if needed -->
-    </div>
+    
 
     <!-- Error Alert -->
     <a-alert
@@ -22,10 +17,6 @@
       @close="error = null"
     />
 
-    <!-- Attendance Filters (if you have one) -->
-    <div class="mb-6">
-      <AttendanceFilters />
-    </div>
 
     <!-- Table -->
     <a-table
@@ -34,7 +25,7 @@
       row-key="id"
       bordered
       :loading="loading"
-      class="bg-white rounded-xl shadow-lg overflow-hidden"
+      class="bg-white rounded-xl shadow-lg"
       :scroll="{ x: 1400 }"
     >
       <template #bodyCell="{ column, record, index }">
@@ -218,12 +209,62 @@ import { useUserStore } from '~/stores/user'
 import EmployeeAttendanceDrawer from '@/components/attendance/EmployeeAttendanceDrawer.vue'
 import AttendanceFilters from '@/components/attendance/AttendanceFilters.vue'
 
-const { $echo } = useNuxtApp()
-const userStore = useUserStore()
+
+const props = defineProps<{
+  filter?: { from: string; to: string } | null
+}>()
 
 const rows = ref<any[]>([])
 const loading = ref(true)
 const error = ref<string | null>(null)
+
+const fetchAttendance = async () => {
+  loading.value = true
+  error.value = null
+  try {
+    let url = '/admin/attendance/today'
+    if (props.filter) {
+      url = '/admin/attendance/report'
+      const res = await api.get(url, {
+        params: { from: props.filter.from, to: props.filter.to }
+      })
+      rows.value = Array.isArray(res.data) ? res.data : res.data?.data || []
+    } else {
+      const res = await api.get(url)
+      rows.value = Array.isArray(res.data) ? res.data : res || []
+    }
+  } catch (err: any) {
+    error.value = 'Failed to load attendance'
+    message.error(error.value)
+    rows.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+// Watch for filter changes
+watch(() => props.filter, fetchAttendance, { deep: true, immediate: true })
+
+onMounted(() => {
+  fetchAttendance()
+
+  // Realtime still works for today
+  $echo.private('attendance.hr')
+    .listen('.attendance.recorded', (e: any) => {
+      if (e?.attendance && e?.employee) {
+        const fullRecord = { ...e.attendance, employee: e.employee }
+        const exists = rows.value.some(r => r.id === fullRecord.id)
+        if (!exists && !props.filter) { // Only add if viewing today
+          rows.value.unshift(fullRecord)
+          message.success(`${e.employee.first_name} clocked in!`)
+        }
+      }
+    })
+})
+
+const { $echo } = useNuxtApp()
+const userStore = useUserStore()
+
 
 const selectedEmployee = ref<any>(null)
 const drawerVisible = ref(false)

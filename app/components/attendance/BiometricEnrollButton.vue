@@ -49,7 +49,6 @@ const enroll = () => {
   <a-button
     type="primary"
     :loading="loading"
-    :disabled="!props.employeeId"
     @click="enroll"
   >
     Enroll Biometric
