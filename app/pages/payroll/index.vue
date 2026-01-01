@@ -1,19 +1,53 @@
+<!-- pages/admin/payroll/index.vue -->
 <template>
   <div class="p-6 bg-slate-100 min-h-screen">
     <div class="flex justify-between items-center mb-8">
-      <h1 class="text-3xl font-bold text-slate-800">Payroll Management</h1>
+      <div>
+        <h1 class="text-3xl font-bold text-slate-800">Payroll Management</h1>
+        <p class="text-slate-600 mt-1">Generate and manage monthly payroll</p>
+      </div>
 
-      <a-button
-        type="primary"
-        size="large"
-        :loading="running"
-        @click="showRunModal = true"
-      >
-        <template #icon>
-          <play-circle-outlined />
-        </template>
-        Run Payroll
-      </a-button>
+      <div class="flex flex-wrap gap-3">
+        <!-- Run Payroll -->
+        <a-button
+          type="primary"
+          size="large"
+          :loading="running"
+          @click="showRunModal = true"
+        >
+          <template #icon>
+            <play-circle-outlined />
+          </template>
+          Run Payroll
+        </a-button>
+
+        <!-- Export Buttons (only when data exists) -->
+        <div v-if="payrolls.length > 0" class="flex gap-3">
+          <a-button
+            type="default"
+            size="large"
+            @click="exportPDF"
+            :loading="exportingPDF"
+          >
+            <template #icon>
+              <file-pdf-outlined />
+            </template>
+            Export PDF
+          </a-button>
+
+          <a-button
+            type="default"
+            size="large"
+            @click="exportExcel"
+            :loading="exportingExcel"
+          >
+            <template #icon>
+              <file-excel-outlined />
+            </template>
+            Export Excel
+          </a-button>
+        </div>
+      </div>
     </div>
 
     <!-- Year & Month Selector -->
@@ -21,21 +55,21 @@
       <div class="flex flex-wrap gap-4 items-end">
         <div>
           <label class="block text-sm font-medium text-slate-700 mb-2">Year</label>
-          <a-select v-model:value="year" placeholder="Select year" style="width: 150px">
+          <a-select v-model:value="year" placeholder="Select year" style="width: 150px" size="large">
             <a-select-option v-for="y in years" :key="y" :value="y">{{ y }}</a-select-option>
           </a-select>
         </div>
 
         <div>
           <label class="block text-sm font-medium text-slate-700 mb-2">Month</label>
-          <a-select v-model:value="month" placeholder="Select month" style="width: 200px">
+          <a-select v-model:value="month" placeholder="Select month" style="width: 200px" size="large">
             <a-select-option v-for="(m, i) in months" :key="i + 1" :value="i + 1">
               {{ m }}
             </a-select-option>
           </a-select>
         </div>
 
-        <a-button type="default" @click="fetchPayroll">
+        <a-button type="default" size="large" @click="fetchPayroll">
           <template #icon><search-outlined /></template>
           View Payroll
         </a-button>
@@ -59,6 +93,7 @@
       bordered
       :loading="loading"
       class="bg-white rounded-lg shadow-sm overflow-hidden"
+      :scroll="{ x: 1400 }"
     >
       <template #bodyCell="{ column, record, index }">
         <template v-if="column.key === 'index'">
@@ -116,12 +151,12 @@
           You are about to generate payroll for <strong>{{ months[month - 1] }} {{ year }}</strong>.
         </p>
         <p class="text-slate-600">
-          This will calculate salaries for all employees and generate payslips.
+          This will calculate salaries for all active employees and generate payslips.
         </p>
         <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
           <p class="text-amber-800 font-medium">Warning:</p>
           <p class="text-amber-700 text-sm mt-1">
-            Running payroll again for the same month will overwrite existing records.
+            This action cannot be undone. Payslips will be emailed to employees.
           </p>
         </div>
       </div>
@@ -136,10 +171,14 @@ import { message } from 'ant-design-vue'
 import {
   PlayCircleOutlined,
   SearchOutlined,
+  FilePdfOutlined,
+  FileExcelOutlined,
 } from '@ant-design/icons-vue'
 
 const loading = ref(false)
 const running = ref(false)
+const exportingPDF = ref(false)
+const exportingExcel = ref(false)
 const error = ref<string | null>(null)
 const showRunModal = ref(false)
 
@@ -207,11 +246,61 @@ const runPayroll = async () => {
     await api.post('/payrolls/run', { year: year.value, month: month.value })
     message.success('Payroll run successfully! Payslips sent to employees.')
     showRunModal.value = false
-    fetchPayroll()
+    await fetchPayroll()
   } catch (err: any) {
     message.error(err.response?.data?.message || 'Failed to run payroll')
   } finally {
     running.value = false
+  }
+}
+
+// Export PDF
+const exportPDF = async () => {
+  exportingPDF.value = true
+  try {
+    const res = await api.get('/payrolls/export/pdf', {
+      params: { year: year.value, month: month.value },
+      responseType: 'blob'
+    })
+
+    const url = window.URL.createObjectURL(new Blob([res.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `payroll-${months[month - 1]}-${year}.pdf`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+
+    message.success('Payroll PDF downloaded successfully')
+  } catch (err) {
+    message.error('Failed to export PDF')
+  } finally {
+    exportingPDF.value = false
+  }
+}
+
+// Export Excel
+const exportExcel = async () => {
+  exportingExcel.value = true
+  try {
+    const res = await api.get('/payrolls/export/excel', {
+      params: { year: year.value, month: month.value },
+      responseType: 'blob'
+    })
+
+    const url = window.URL.createObjectURL(new Blob([res.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `payroll-${months[month - 1]}-${year}.xlsx`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+
+    message.success('Payroll Excel downloaded successfully')
+  } catch (err) {
+    message.error('Failed to export Excel')
+  } finally {
+    exportingExcel.value = false
   }
 }
 
