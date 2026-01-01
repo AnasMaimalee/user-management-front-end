@@ -36,12 +36,10 @@
       :scroll="{ x: 1300 }"
     >
       <template #bodyCell="{ column, record, index }">
-        <!-- Index -->
         <template v-if="column.key === 'index'">
           <span class="text-slate-600 font-semibold">{{ index + 1 }}</span>
         </template>
 
-        <!-- Employee -->
         <template v-else-if="column.key === 'employee'">
           <div class="flex items-center gap-4">
             <a-avatar
@@ -61,17 +59,14 @@
           </div>
         </template>
 
-        <!-- Code -->
         <template v-else-if="column.key === 'code'">
           <a-tag color="blue" class="font-mono text-sm font-bold px-3 py-1">
             {{ record.employee_code || 'N/A' }}
           </a-tag>
         </template>
 
-        <!-- Status -->
         <template v-else-if="column.key === 'status'">
           <div class="space-y-2">
-            <!-- Fully Enrolled -->
             <div v-if="record.fingerprint_enrolled_at" class="flex items-center gap-2">
               <a-tag color="green" class="text-sm font-medium px-3 py-1">
                 <check-circle-filled class="mr-1" />
@@ -82,15 +77,13 @@
               </div>
             </div>
 
-            <!-- Pending Scan -->
-            <div v-else-if="record.biometric_uid" class="flex items-center gap-2">
+            <div v-else-if="record.device_user_id" class="flex items-center gap-2">
               <a-tag color="orange" class="text-sm font-medium px-3 py-1">
                 <clock-circle-filled class="mr-1" />
                 Pending Fingerprint Scan
               </a-tag>
             </div>
 
-            <!-- Not Sent -->
             <div v-else class="flex items-center gap-2">
               <a-tag color="default" class="text-sm font-medium px-3 py-1">
                 <close-circle-filled class="mr-1" />
@@ -100,9 +93,7 @@
           </div>
         </template>
 
-        <!-- Actions -->
         <template v-else-if="column.key === 'actions'">
-          <!-- Fully Enrolled: Reset -->
           <a-button
             v-if="record.fingerprint_enrolled_at"
             type="link"
@@ -114,9 +105,8 @@
             Reset Fingerprint
           </a-button>
 
-          <!-- Pending: Resend -->
           <a-button
-            v-else-if="record.biometric_uid"
+            v-else-if="record.device_user_id"
             type="primary"
             size="small"
             class="font-medium"
@@ -125,7 +115,6 @@
             Resend to Device
           </a-button>
 
-          <!-- Not Sent: Send -->
           <a-button
             v-else
             type="primary"
@@ -139,65 +128,57 @@
         </template>
       </template>
 
-      <!-- Empty State -->
       <template #emptyText>
-        <a-empty
-          description="No employees found"
-          :image="simpleImage"
-        />
+        <a-empty description="No employees found" :image="simpleImage" />
       </template>
     </a-table>
 
     <!-- Enroll Modal -->
-   <a-modal
-  v-model:open="showEnrollModal"
-  title="Enroll New Employee"
-  width="1200" 
-  centered
-  :body-style="{ padding: '24px' }"  
->
-  <div class="space-y-6">
-    <!-- Search bar with label -->
-    <div>
-      <label class="block text-sm font-medium text-slate-700 mb-2">
-        Select Employee to Enroll
-      </label>
-      <a-select
-        v-model:value="selectedEmployeeId"
-        placeholder="Search by name, employee code, or email"
-        show-search
-        :filter-option="filterOption"
-        :options="availableEmployeeOptions"
-        style="width: 100%"
-        size="large"  
-        :dropdown-style="{ maxHeight: '400px' }" 
-      />
-    </div>
+    <a-modal
+      v-model:open="showEnrollModal"
+      title="Enroll New Employee"
+      width="1200"
+      centered
+      :body-style="{ padding: '24px' }"
+    >
+      <div class="space-y-6">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">
+            Select Employee to Enroll
+          </label>
+          <a-select
+            v-model:value="selectedEmployeeId"
+            placeholder="Search by name, employee code, or email"
+            show-search
+            :filter-option="filterOption"
+            :options="availableEmployeeOptions"
+            style="width: 100%"
+            size="large"
+            :dropdown-style="{ maxHeight: '400px' }"
+          />
+        </div>
 
-    <!-- Helpful info -->
-    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-      <strong>Note:</strong> Selected employee will be sent to the biometric device. 
-      Ask them to place their finger on the scanner to complete enrollment.
-    </div>
-  </div>
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
+          <strong>Note:</strong> Selected employee will be sent to the biometric device. 
+          Ask them to place their finger on the scanner to complete enrollment.
+        </div>
+      </div>
 
-  <template #footer>
-    <div class="flex justify-end gap-4">
-      <a-button @click="showEnrollModal = false" size="large">
-        Cancel
-      </a-button>
-      <a-button
-        type="primary"
-        size="large"
-        :loading="enrolling"
-        :disabled="!selectedEmployeeId"
-        @click="startEnrollment"
-      >
-        Send to Device
-      </a-button>
-    </div>
-  </template>
-</a-modal>
+      <template #footer>
+        <div class="flex justify-end gap-4">
+          <a-button @click="showEnrollModal = false" size="large">Cancel</a-button>
+          <a-button
+            type="primary"
+            size="large"
+            :loading="enrolling"
+            :disabled="!selectedEmployeeId"
+            @click="startEnrollment"
+          >
+            Send to Device
+          </a-button>
+        </div>
+      </template>
+    </a-modal>
   </div>
 </template>
 
@@ -224,6 +205,9 @@ const enrolling = ref(false)
 const selectedEmployeeId = ref<string | null>(null)
 const availableEmployeeOptions = ref<any[]>([])
 
+// GET SECRET FROM .env
+const biometricSecret = import.meta.env.VITE_BIOMETRIC_SECRET
+
 const getInitials = (emp: any) => {
   const first = emp.first_name?.[0] || ''
   const last = emp.last_name?.[0] || ''
@@ -241,16 +225,14 @@ const formatDate = (date: string) => {
 const filterOption = (input: string, option: any) =>
   option.label.toLowerCase().includes(input.toLowerCase())
 
-// Fetch ALL employees
 const fetchAllEmployees = async () => {
   loading.value = true
   try {
-    const res = await api.get('/employees') // your endpoint that returns all employees
+    const res = await api.get('/employees')
     allEmployees.value = res.data || []
 
-    // Update dropdown options (only not sent)
     availableEmployeeOptions.value = allEmployees.value
-      .filter(e => !e.biometric_uid)
+      .filter(e => !e.device_user_id)
       .map(e => ({
         value: e.id,
         label: `${e.first_name} ${e.last_name} (${e.employee_code || 'No Code'}) - ${e.email}`
@@ -263,42 +245,61 @@ const fetchAllEmployees = async () => {
   }
 }
 
-// Send new from modal
+// ENROLLMENT WITH SECRET + DEVICE CHECK + PRESERVE
 const startEnrollment = async () => {
   if (!selectedEmployeeId.value) return
   enrolling.value = true
   try {
-    await api.post('/biometric/enroll', { employee_id: selectedEmployeeId.value })
-    message.success('Employee sent to device successfully!')
+    const res = await api.post('/biometric/enroll', {
+      employee_id: selectedEmployeeId.value,
+      biometric_secret: biometricSecret
+    })
+
+    message.success(res.data.message || 'Employee sent to device successfully!')
     showEnrollModal.value = false
     selectedEmployeeId.value = null
     await fetchAllEmployees()
   } catch (err: any) {
-    message.error(err?.data?.message || 'Failed to send to device')
+    const msg = err.response?.data?.message || 'Failed to enroll'
+    if (msg.includes('No biometric device detected')) {
+      message.error('No scanner connected. Please check device settings.')
+    } else if (msg.includes('already enrolled')) {
+      message.info('Employee is already fully enrolled.')
+    } else {
+      message.error(msg)
+    }
   } finally {
     enrolling.value = false
   }
 }
 
-// Resend
+// Resend with secret
 const resendToDevice = (record: any) => {
   Modal.confirm({
     title: 'Resend to Device?',
-    content: `Resend ${record.first_name} ${record.last_name} for fingerprint enrollment?`,
+    content: `Resend ${record.first_name} ${record.last_name} for enrollment?`,
     okText: 'Resend',
     async onOk() {
       try {
-        await api.post('/biometric/enroll', { employee_id: record.id })
-        message.success('Resent successfully!')
+        const res = await api.post('/biometric/enroll', {
+          employee_id: record.id,
+          biometric_secret: biometricSecret
+        })
+        message.success(res.data.message || 'Resent successfully!')
         await fetchAllEmployees()
-      } catch {
-        message.error('Failed to resend')
+      } catch (err: any) {
+        const msg = err.response?.data?.message || 'Failed'
+        if (msg.includes('No biometric device detected')) {
+          message.error('No scanner connected.')
+        } else {
+          message.error(msg)
+        }
       }
     }
   })
 }
 
-// Send never-sent employee
+// Send with secret
 const sendToDevice = (record: any) => {
   Modal.confirm({
     title: 'Send to Biometric Device?',
@@ -306,31 +307,45 @@ const sendToDevice = (record: any) => {
     okText: 'Send',
     async onOk() {
       try {
-        await api.post('/biometric/enroll', { employee_id: record.id })
-        message.success('Sent successfully!')
+        const res = await api.post('/biometric/enroll', {
+          employee_id: record.id,
+          biometric_secret: biometricSecret
+        })
+        message.success(res.data.message || 'Sent successfully!')
         await fetchAllEmployees()
-      } catch {
-        message.error('Failed to send')
+      } catch (err: any) {
+        const msg = err.response?.data?.message || 'Failed'
+        if (msg.includes('No biometric device detected')) {
+          message.error('No scanner connected.')
+        } else {
+          message.error(msg)
+        }
       }
     }
   })
 }
 
-// Reset
+// Reset (already working — no change needed)
 const confirmReset = (record: any) => {
   Modal.confirm({
     title: 'Reset Fingerprint?',
-    content: `This will permanently remove ${record.first_name}'s fingerprint.`,
+    content: `This will permanently remove ${record.first_name}'s fingerprint from the system.`,
     okType: 'danger',
     okText: 'Reset',
-    onOk() {
-      // Implement reset endpoint later
-      message.success('Fingerprint reset (implement endpoint)')
-      fetchAllEmployees()
+    async onOk() {
+      try {
+        await api.post('/admin/biometric/reset', {
+          employee_id: record.id,
+          biometric_secret: biometricSecret
+        })
+        message.success('Fingerprint reset successfully!')
+        await fetchAllEmployees()
+      } catch (err: any) {
+        message.error(err.response?.data?.message || 'Reset failed')
+      }
     }
   })
 }
-
 const columns = [
   { title: '#', key: 'index', width: 80, fixed: 'left' },
   { title: 'Employee', key: 'employee', width: 380 },
