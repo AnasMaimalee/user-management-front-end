@@ -25,159 +25,199 @@
       class="mb-6"
     />
 
-    <a-table
-      :columns="columns"
-      :data-source="employees"
-      row-key="id"
-      bordered
-      :loading="loading"
-      class="bg-white rounded-lg shadow-sm overflow-hidden"
-    >
-      <template #bodyCell="{ column, record, index }">
-        <!-- Index -->
-        <template v-if="column.key === 'index'">
-          <span class="text-slate-600 font-semibold">{{ index + 1 }}</span>
-        </template>
+    <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div class="p-6 border-b border-slate-200 bg-slate-50">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-semibold text-slate-800">Employee List</h2>
 
-        <!-- Employee Code -->
-        <template v-else-if="column.key === 'employee_code'">
-          <a-tag color="geekblue" class="font-mono text-xs font-bold">
-            {{ record.employee_code || 'N/A' }}
-          </a-tag>
-        </template>
+         
+        </div>
 
-        <!-- Full Name -->
-        <template v-else-if="column.key === 'name'">
-          <div class="flex items-center gap-3">
-            <a-avatar
-              :size="36"
-              class="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold"
-            >
-              {{ getInitials(record) }}
-            </a-avatar>
-            <div>
-              <div class="font-medium text-slate-800">
-                {{ record.first_name }} {{ record.last_name }}
-              </div>
-              <div class="text-xs text-slate-500">ID: {{ record.id.slice(0, 8) }}...</div>
-            </div>
-          </div>
-        </template>
-
-        <!-- Email -->
-        <template v-else-if="column.key === 'email'">
-          <a :href="`mailto:${record.email}`" class="text-blue-600 hover:text-blue-800 text-sm">
-            {{ record.email || '—' }}
-          </a>
-        </template>
-
-        <!-- Department -->
-        <template v-else-if="column.key === 'department'">
-          <a-tag color="cyan" v-if="record.department">
-            {{ record.department.name }}
-          </a-tag>
-          <span v-else class="text-slate-400 text-sm">Not Assigned</span>
-        </template>
-
-        <!-- Rank -->
-        <template v-else-if="column.key === 'rank'">
-          <a-tag color="purple" v-if="record.rank">
-            {{ record.rank.name }}
-          </a-tag>
-          <span v-else class="text-slate-400 text-sm">Not Assigned</span>
-        </template>
-
-        <!-- Branch -->
-        <template v-else-if="column.key === 'branch'">
-          <a-tag color="orange" v-if="record.branch">
-            {{ record.branch.name }}
-          </a-tag>
-          <span v-else class="text-slate-400 text-sm">Not Assigned</span>
-        </template>
-
-        <!-- Status -->
-        <template v-else-if="column.key === 'status'">
-          <a-tag :color="record.status === 'active' ? 'green' : 'volcano'">
-            <template #icon>
-              <span class="w-2 h-2 rounded-full inline-block mr-1"
-                :class="record.status === 'active' ? 'bg-green-500' : 'bg-red-500'"
-              ></span>
-            </template>
-            {{ (record.status || 'unknown').toUpperCase() }}
-          </a-tag>
-        </template>
-
-        <!-- Actions -->
-        <template v-else-if="column.key === 'actions'">
-          <a-dropdown trigger="click">
-            <a-button type="text" size="small">
-              <ellipsis-outlined class="text-lg text-slate-600 hover:text-slate-900 transition" />
+        <!-- Refresh + Export Buttons -->
+        <div class="flex justify-end gap-3">
+          <a-button type="default" @click="fetchEmployees" :loading="loading">
+            <ReloadOutlined class="mr-2" />
+            Refresh
+          </a-button>
+          <a-button
+            type="primary"
+            danger
+            @click="exportPdf"
+            :loading="exportingPdf"
+            :disabled="filteredEmployees.length === 0"
+          >
+            Export PDF
+          </a-button>
+          <a-button
+            type="primary"
+            @click="exportExcel"
+            :loading="exportingExcel"
+            :disabled="filteredEmployees.length === 0"
+          >
+            Export Excel
+          </a-button>
+           <!-- Filter Dropdown -->
+          <a-dropdown :trigger="['click']" v-model:open="filterOpen">
+            <a-button type="primary">
+              <FilterOutlined class="mr-2" />
+              Filters
+              <DownOutlined class="ml-2" />
             </a-button>
             <template #overlay>
-              <a-menu class="shadow-lg">
-                <a-menu-item
-                  v-if="userStore.can('update employees')"
-                  @click="openUpdate(record)"
-                  class="flex items-center"
-                >
-                  <edit-outlined class="mr-2 text-blue-600" /> Update
-                </a-menu-item>
-
-                <a-menu-item
-                  v-if="userStore.can('update employee status')"
-                  @click="toggleStatus(record)"
-                  class="flex items-center"
-                >
-                  <sync-outlined class="mr-2 text-yellow-600" />
-                  {{ record.status === 'active' ? 'Deactivate' : 'Activate' }}
-                </a-menu-item>
-
-                <a-menu-divider />
-
-                <a-menu-item
-                  danger
-                  v-if="userStore.can('delete employees')"
-                  @click="confirmDelete(record)"
-                  class="flex items-center"
-                >
-                  <delete-outlined class="mr-2" /> Delete
-                </a-menu-item>
-              </a-menu>
+              <div class="bg-white rounded-xl shadow-2xl border border-slate-200 p-6 w-96">
+                <h3 class="text-lg font-semibold text-slate-800 mb-5">Filter Employees</h3>
+                <div class="space-y-5">
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Department</label>
+                    <a-select
+                      v-model:value="filters.department"
+                      placeholder="All departments"
+                      :options="departmentOptions"
+                      allow-clear
+                      class="w-full"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Rank</label>
+                    <a-select
+                      v-model:value="filters.rank"
+                      placeholder="All ranks"
+                      :options="rankOptions"
+                      allow-clear
+                      class="w-full"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Branch</label>
+                    <a-select
+                      v-model:value="filters.branch"
+                      placeholder="All branches"
+                      :options="branchOptions"
+                      allow-clear
+                      class="w-full"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Status</label>
+                    <a-select
+                      v-model:value="filters.status"
+                      placeholder="All statuses"
+                      allow-clear
+                      class="w-full"
+                    >
+                      <a-select-option value="active">Active</a-select-option>
+                      <a-select-option value="inactive">Inactive</a-select-option>
+                    </a-select>
+                  </div>
+                </div>
+                <div class="mt-6 flex justify-end">
+                  <a-button @click="resetFilters">Reset Filters</a-button>
+                </div>
+              </div>
             </template>
           </a-dropdown>
+        </div>
+      </div>
+
+      <a-table
+        :columns="columns"
+        :data-source="filteredEmployees"
+        row-key="id"
+        bordered
+        :loading="loading"
+      >
+        <template #bodyCell="{ column, record, index }">
+          <template v-if="column.key === 'index'">{{ index + 1 }}</template>
+          <template v-else-if="column.key === 'employee_code'">
+            <a-tag color="geekblue">{{ record.employee_code || '—' }}</a-tag>
+          </template>
+          <template v-else-if="column.key === 'name'">
+            <div class="flex items-center gap-3">
+              <a-avatar
+                :size="40"
+                class="bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold"
+              >
+                {{ getInitials(record) }}
+              </a-avatar>
+              <div>
+                <div class="font-medium text-slate-800">{{ fullName(record) }}</div>
+                <div class="text-xs text-slate-500">{{ record.id.slice(0, 8) }}...</div>
+              </div>
+            </div>
+          </template>
+          <template v-else-if="column.key === 'email'">
+            <a :href="`mailto:${record.email}`" class="text-blue-600 hover:underline">{{ record.email || '—' }}</a>
+          </template>
+          <template v-else-if="column.key === 'department'">
+            <a-tag color="cyan">{{ record.department?.name || '—' }}</a-tag>
+          </template>
+          <template v-else-if="column.key === 'rank'">
+            <a-tag color="purple">{{ record.rank?.name || '—' }}</a-tag>
+          </template>
+          <template v-else-if="column.key === 'branch'">
+            <a-tag color="orange">{{ record.branch?.name || '—' }}</a-tag>
+          </template>
+          <template v-else-if="column.key === 'status'">
+            <a-tag :color="record.status === 'active' ? 'green' : 'volcano'">
+              {{ record.status.toUpperCase() }}
+            </a-tag>
+          </template>
+          <template v-else-if="column.key === 'actions'">
+            <a-dropdown trigger="click">
+              <a-button type="text" size="small">
+                <EllipsisOutlined class="text-lg" />
+              </a-button>
+              <template #overlay>
+                <a-menu>
+                  <a-menu-item @click="openUpdate(record)">
+                    <EditOutlined class="mr-2 text-blue-600" /> Update
+                  </a-menu-item>
+                  <a-menu-item @click="toggleStatus(record)">
+                    <SyncOutlined class="mr-2 text-yellow-600" />
+                    {{ record.status === 'active' ? 'Deactivate' : 'Activate' }}
+                  </a-menu-item>
+                  <a-menu-item danger @click="confirmDelete(record)">
+                    <DeleteOutlined class="mr-2" /> Delete
+                  </a-menu-item>
+                </a-menu>
+              </template>
+            </a-dropdown>
+          </template>
         </template>
-      </template>
-    </a-table>
+
+        <template #emptyText>
+          <div class="py-16 text-center">
+            <div class="text-8xl text-slate-100 mb-4">👥</div>
+            <p class="text-2xl font-medium text-slate-700">No employees found</p>
+            <p class="text-slate-500">Create your first employee to get started</p>
+          </div>
+        </template>
+      </a-table>
+    </div>
 
     <!-- Modals -->
-    <CreateEmployee
-      :open="showCreate"
-      @close="showCreate = false"
-      @created="fetchEmployees"
-    />
-
-    <UpdateEmployee
-      :open="showUpdate"
-      :employee="selectedEmployee"
-      @close="showUpdate = false"
-      @updated="fetchEmployees"
-    />
+    <CreateEmployee v-model:open="showCreate" @created="fetchEmployees" />
+    <UpdateEmployee v-model:open="showUpdate" :employee="selectedEmployee" @updated="fetchEmployees" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
+import dayjs from 'dayjs'
 import api from '~/utils/api'
-import { message, Modal } from 'ant-design-vue'
+import { notification, Modal } from 'ant-design-vue'
+import { useUserStore } from '~/stores/user'
 import {
   EllipsisOutlined,
   PlusOutlined,
   EditOutlined,
   SyncOutlined,
   DeleteOutlined,
+  FilterOutlined,
+  ReloadOutlined,
+  DownOutlined,
 } from '@ant-design/icons-vue'
 
-import { useUserStore } from '~/stores/user'
 import CreateEmployee from '~/components/employees/CreateEmployee.vue'
 import UpdateEmployee from '~/components/employees/UpdateEmployee.vue'
 
@@ -185,83 +225,155 @@ const userStore = useUserStore()
 await userStore.fetchUser()
 
 const employees = ref<any[]>([])
+const filteredEmployees = computed(() => {
+  return employees.value.filter(e => {
+    if (filters.department && e.department?.id !== filters.department) return false
+    if (filters.rank && e.rank?.id !== filters.rank) return false
+    if (filters.branch && e.branch?.id !== filters.branch) return false
+    if (filters.status && e.status !== filters.status) return false
+    return true
+  })
+})
+
 const error = ref<string | null>(null)
 const loading = ref(false)
+const exportingPdf = ref(false)
+const exportingExcel = ref(false)
 const showCreate = ref(false)
 const showUpdate = ref(false)
 const selectedEmployee = ref<any>(null)
 
-// Helper: Get initials for avatar
-const getInitials = (record: any) => {
-  const first = record.first_name?.[0] || ''
-  const last = record.last_name?.[0] || ''
-  return (first + last).toUpperCase() || 'NA'
-}
+const filterOpen = ref(false)
+
+const filters = reactive({
+  department: null,
+  rank: null,
+  branch: null,
+  status: null,
+})
+
+const departmentOptions = ref<any[]>([])
+const rankOptions = ref<any[]>([])
+const branchOptions = ref<any[]>([])
+
+const statusOptions = [
+  { value: 'active', label: 'Active' },
+  { value: 'inactive', label: 'Inactive' },
+]
 
 const columns = [
-  { title: '#', key: 'index', width: 70, fixed: 'left' },
-  { title: 'Employee', key: 'name', width: 280 },
+  { title: '#', key: 'index', width: 60 },
+  { title: 'Name', key: 'name', width: 280 },
   { title: 'Code', key: 'employee_code', width: 120 },
   { title: 'Email', key: 'email', width: 220 },
   { title: 'Department', key: 'department', width: 160 },
   { title: 'Rank', key: 'rank', width: 140 },
   { title: 'Branch', key: 'branch', width: 140 },
   { title: 'Status', key: 'status', width: 120 },
-  { title: 'Actions', key: 'actions', width: 100, fixed: 'right' },
+  { title: 'Actions', key: 'actions', width: 100 },
 ]
+
+const fullName = (e: any) => e ? `${e.first_name || ''} ${e.last_name || ''}`.trim() : 'Unknown'
+const getInitials = (e: any) => e ? `${e.first_name?.[0] || ''}${e.last_name?.[0] || ''}`.toUpperCase() : 'NA'
 
 const fetchEmployees = async () => {
   loading.value = true
   try {
     const res = await api.get('/employees')
-    employees.value = res.data
+    employees.value = res.data || []
     error.value = null
   } catch (err: any) {
-    console.error('Fetch employees error:', err)
-    if (err.response?.status === 403) {
-      error.value = 'You do not have permission to view employees'
-    } else {
-      error.value = err.response?.data?.message || 'Failed to load employees'
-    }
+    error.value = err.response?.data?.message || 'Failed to load employees'
+    notification.error({ message: error.value })
   } finally {
     loading.value = false
+  }
+}
+
+const fetchFilterOptions = async () => {
+  try {
+    const [deptRes, rankRes, branchRes] = await Promise.all([
+      api.get('/departments'),
+      api.get('/ranks'),
+      api.get('/branches')
+    ])
+
+    departmentOptions.value = (deptRes.data || []).map(d => ({ value: d.id, label: d.name }))
+    rankOptions.value = (rankRes.data || []).map(r => ({ value: r.id, label: r.name }))
+    branchOptions.value = (branchRes.data || []).map(b => ({ value: b.id, label: b.name }))
+  } catch (err: any) {
+    notification.error({ message: 'Failed to load filter options' })
+  }
+}
+
+const resetFilters = () => {
+  filters.department = null
+  filters.rank = null
+  filters.branch = null
+  filters.status = null
+  filterOpen.value = false
+}
+
+const exportFile = async (format: 'pdf' | 'excel') => {
+  const loadingRef = format === 'pdf' ? exportingPdf : exportingExcel
+  loadingRef.value = true
+  try {
+    const params = {}
+    if (filters.department) params.department = filters.department
+    if (filters.rank) params.rank = filters.rank
+    if (filters.branch) params.branch = filters.branch
+    if (filters.status) params.status = filters.status
+
+    const res = await api.get(`/employees/export-${format}`, { params, responseType: 'blob' })
+
+    const blob = new Blob([res.data], {
+      type: format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    })
+
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = `employees_${dayjs().format('YYYY-MM-DD')}.${format === 'pdf' ? 'pdf' : 'xlsx'}`
+    link.click()
+    URL.revokeObjectURL(link.href)
+
+    notification.success({ message: `${format.toUpperCase()} exported successfully` })
+  } catch (err) {
+    notification.error({ message: 'Export failed' })
+  } finally {
+    loadingRef.value = false
+  }
+}
+
+const exportPdf = () => exportFile('pdf')
+const exportExcel = () => exportFile('excel')
+
+const toggleStatus = async (record: any) => {
+  const newStatus = record.status === 'active' ? 'inactive' : 'active'
+  try {
+    await api.patch(`/employees/${record.id}/status`, { status: newStatus })
+    notification.success({ message: `Employee ${newStatus === 'active' ? 'activated' : 'deactivated'}` })
+    fetchEmployees()
+  } catch (err) {
+    notification.error({ message: 'Failed to update status' })
   }
 }
 
 const confirmDelete = (record: any) => {
   Modal.confirm({
     title: 'Delete Employee',
-    content: `<strong>${record.first_name} ${record.last_name}</strong> will be permanently deleted.`,
-    okType: 'danger',
+    content: `Are you sure you want to delete ${fullName(record)}?`,
     okText: 'Delete',
+    okType: 'danger',
     onOk: async () => {
       try {
         await api.delete(`/employees/${record.id}`)
-        message.success('Employee deleted')
+        notification.success({ message: 'Employee deleted' })
         fetchEmployees()
-      } catch {
-        message.error('Failed to delete')
+      } catch (err) {
+        notification.error({ message: 'Failed to delete employee' })
       }
-    },
+    }
   })
-}
-
-const toggleStatus = async (record: any) => {
-  const employee = employees.value.find(e => e.id === record.id);
-  if (!employee) return;
-
-  const oldStatus = employee.status;
-  employee.status = oldStatus === 'active' ? 'inactive' : 'active';
-
-  try {
-    await api.patch(`/employees/${record.id}/status`); // No body needed
-
-    message.success(`Employee ${employee.status === 'active' ? 'activated' : 'deactivated'}`);
-  } catch (err) {
-    employee.status = oldStatus; // Revert
-    message.error('Failed to update status');
-    fetchEmployees(); // Force sync
-  }
 }
 
 const openUpdate = (record: any) => {
@@ -269,17 +381,8 @@ const openUpdate = (record: any) => {
   showUpdate.value = true
 }
 
-onMounted(fetchEmployees)
+onMounted(() => {
+  fetchFilterOptions()
+  fetchEmployees()
+})
 </script>
-
-<style scoped>
-:deep(.ant-table-thead > tr > th) {
-  background-color: #f1f5f9 !important;
-  font-weight: 600;
-  color: #334155;
-}
-
-:deep(.ant-table-tbody > tr:hover > td) {
-  background-color: #f8fafc !important;
-}
-</style>
