@@ -81,7 +81,7 @@
               </a-select>
 
               <!-- Reset -->
-              <a-button type="text" @click="resetFilters" class="text-slate-600 hover:text-slate-800">
+              <a-button type="primary" danger @click="resetFilters">
                 Reset All
               </a-button>
             </div>
@@ -92,7 +92,6 @@
                 v-if="filteredRows.length > 0"
                 type="default"
                 danger
-                size="large"
                 @click="exportPDF"
                 :loading="exportingPDF"
                 class="px-6 shadow-md"
@@ -103,7 +102,6 @@
               <a-button
                 v-if="filteredRows.length > 0"
                 type="default"
-                size="large"
                 @click="exportExcel"
                 :loading="exportingExcel"
                 class="px-6 shadow-md"
@@ -416,59 +414,110 @@ const resetFilters = () => {
 const exportingPDF = ref(false)
 const exportingExcel = ref(false)
 
-// Export PDF - ADMIN with filters
+// Export PDF - respects current filters (employee + department + month/year)
 const exportPDF = async () => {
   exportingPDF.value = true
   try {
-    const params: any = {}
+    const params = {}
 
-    // Always send from/to — default to current month
-    let year = filterYear.value || new Date().getFullYear()
-    let month = filterMonth.value || (new Date().getMonth() + 1)
+    // ────────────────────────────────────────────────
+    // Determine date range based on current filters
+    // ────────────────────────────────────────────────
+    let fromDate, toDate
 
-    const fromDate = new Date(year, month - 1, 1)
-    const toDate = new Date(year, month, 0)
+    const currentYear = new Date().getFullYear()
+    const currentMonth = new Date().getMonth() + 1
+
+    if (filterMonth.value && filterYear.value) {
+      // Specific month + year selected
+      fromDate = new Date(filterYear.value, filterMonth.value - 1, 1)
+      toDate = new Date(filterYear.value, filterMonth.value, 0)
+    } else if (filterMonth.value) {
+      // Only month selected → assume current year
+      fromDate = new Date(currentYear, filterMonth.value - 1, 1)
+      toDate = new Date(currentYear, filterMonth.value, 0)
+    } else if (filterYear.value) {
+      // Only year selected → full year
+      fromDate = new Date(filterYear.value, 0, 1)
+      toDate = new Date(filterYear.value, 11, 31)
+    } else {
+      // No date filter → default to last 31 days
+      toDate = new Date()
+      fromDate = new Date()
+      fromDate.setDate(toDate.getDate() - 31)
+    }
 
     params.from = fromDate.toISOString().split('T')[0]
     params.to = toDate.toISOString().split('T')[0]
 
-    if (filterDepartment.value) params.department_id = filterDepartment.value
-    if (filterEmployee.value) params.employee_id = filterEmployee.value
+    // Add other filters
+    if (filterDepartment.value) {
+      params.department_id = filterDepartment.value
+    }
+    if (filterEmployee.value) {
+      params.employee_id = filterEmployee.value
+    }
+
+    // Optional: nicer filename
+    let filename = `Attendance-${params.from}_to_${params.to}`
+    if (filterEmployee.value) {
+      const emp = employees.value.find(e => e.id === filterEmployee.value)
+      if (emp) {
+        const name = `${emp.first_name}-${emp.last_name}`.toLowerCase().replace(/\s+/g, '-')
+        filename += `_${name}`
+      }
+    }
+    filename += '.pdf'
 
     const res = await api.get('/admin/attendance/export/pdf', {
       params,
       responseType: 'blob',
-      timeout: 60000
+      timeout: 90000 // longer timeout for large reports
     })
 
     const url = window.URL.createObjectURL(new Blob([res.data]))
     const link = document.createElement('a')
     link.href = url
-    link.setAttribute('download', `Attendance-${params.from}-to-${params.to}.pdf`)
+    link.setAttribute('download', filename)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
     window.URL.revokeObjectURL(url)
 
     message.success('PDF exported successfully!')
-  } catch (err: any) {
+  } catch (err) {
+    console.error('PDF export error:', err)
     message.error(err.response?.data?.message || 'Failed to export PDF')
   } finally {
     exportingPDF.value = false
   }
 }
 
-// Export Excel - ADMIN with filters
+// Export Excel - same logic
 const exportExcel = async () => {
   exportingExcel.value = true
   try {
-    const params: any = {}
+    const params = {}
 
-    let year = filterYear.value || new Date().getFullYear()
-    let month = filterMonth.value || (new Date().getMonth() + 1)
+    // Same date range logic as PDF
+    let fromDate, toDate
+    const currentYear = new Date().getFullYear()
+    const currentMonth = new Date().getMonth() + 1
 
-    const fromDate = new Date(year, month - 1, 1)
-    const toDate = new Date(year, month, 0)
+    if (filterMonth.value && filterYear.value) {
+      fromDate = new Date(filterYear.value, filterMonth.value - 1, 1)
+      toDate = new Date(filterYear.value, filterMonth.value, 0)
+    } else if (filterMonth.value) {
+      fromDate = new Date(currentYear, filterMonth.value - 1, 1)
+      toDate = new Date(currentYear, filterMonth.value, 0)
+    } else if (filterYear.value) {
+      fromDate = new Date(filterYear.value, 0, 1)
+      toDate = new Date(filterYear.value, 11, 31)
+    } else {
+      toDate = new Date()
+      fromDate = new Date()
+      fromDate.setDate(toDate.getDate() - 31)
+    }
 
     params.from = fromDate.toISOString().split('T')[0]
     params.to = toDate.toISOString().split('T')[0]
@@ -476,29 +525,39 @@ const exportExcel = async () => {
     if (filterDepartment.value) params.department_id = filterDepartment.value
     if (filterEmployee.value) params.employee_id = filterEmployee.value
 
+    let filename = `Attendance-${params.from}_to_${params.to}`
+    if (filterEmployee.value) {
+      const emp = employees.value.find(e => e.id === filterEmployee.value)
+      if (emp) {
+        const name = `${emp.first_name}-${emp.last_name}`.toLowerCase().replace(/\s+/g, '-')
+        filename += `_${name}`
+      }
+    }
+    filename += '.xlsx'
+
     const res = await api.get('/admin/attendance/export/excel', {
       params,
       responseType: 'blob',
-      timeout: 60000
+      timeout: 90000
     })
 
     const url = window.URL.createObjectURL(new Blob([res.data]))
     const link = document.createElement('a')
     link.href = url
-    link.setAttribute('download', `Attendance-${params.from}-to-${params.to}.xlsx`)
+    link.setAttribute('download', filename)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
     window.URL.revokeObjectURL(url)
 
     message.success('Excel exported successfully!')
-  } catch (err: any) {
+  } catch (err) {
+    console.error('Excel export error:', err)
     message.error(err.response?.data?.message || 'Failed to export Excel')
   } finally {
     exportingExcel.value = false
   }
 }
-
 // Manual record & drawer logic (unchanged)
 const selectedEmployee = ref<any>(null)
 const drawerVisible = ref(false)
