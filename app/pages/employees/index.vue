@@ -196,9 +196,8 @@
     </div>
 
     <!-- Modals -->
-    <CreateEmployee v-model:open="showCreate" @created="fetchEmployees" />
-    <UpdateEmployee v-model:open="showUpdate" :employee="selectedEmployee" @updated="fetchEmployees" />
-  </div>
+   <CreateEmployee v-model:open="showCreate" @created="fetchEmployees" />
+    <UpdateEmployee v-model:open="showUpdate" :employee="selectedEmployee" @updated="fetchEmployees" />  </div>
 </template>
 
 <script setup lang="ts">

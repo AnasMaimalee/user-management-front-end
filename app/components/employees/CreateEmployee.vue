@@ -153,13 +153,12 @@ import api from '~/utils/api'
 import { notification } from 'ant-design-vue'
 
 const props = defineProps<{ open: boolean }>()
-const emit = defineEmits(['close', 'created'])
+const emit = defineEmits(['update:open', 'close', 'created'])
 
 const localOpen = ref(false)
 const submitting = ref(false)
 const employeeCodePreview = ref('Loading...')
 
-// Reactive employee object with all fields
 const employee = reactive({
   first_name: '',
   last_name: '',
@@ -174,7 +173,6 @@ const employee = reactive({
   monthly_savings: 0,
 })
 
-// Dropdown data
 const departments = ref<Array<{ id: string; name: string }>>([])
 const ranks = ref<Array<{ id: string; name: string }>>([])
 const branches = ref<Array<{ id: string; name: string }>>([])
@@ -183,7 +181,7 @@ const loadingDepartments = ref(false)
 const loadingRanks = ref(false)
 const loadingBranches = ref(false)
 
-// Sync modal open state
+// Sync with parent via v-model:open
 watch(() => props.open, (val) => {
   localOpen.value = val
   if (val) {
@@ -208,7 +206,11 @@ watch(() => props.open, (val) => {
   }
 })
 
-// Fetch next employee code
+// Also emit update:open when localOpen changes
+watch(localOpen, (val) => {
+  emit('update:open', val)
+})
+
 const fetchNextEmployeeCode = async () => {
   employeeCodePreview.value = 'Loading...'
   try {
@@ -230,21 +232,18 @@ const fetchDepartments = async () => {
     loadingDepartments.value = false
   }
 }
+
 const fetchRanks = async () => {
   loadingRanks.value = true
   try {
     const res = await api.get('/ranks')
-
-    ranks.value = Array.isArray(res.data?.[0])
-      ? res.data[0]
-      : res.data
+    ranks.value = Array.isArray(res.data?.[0]) ? res.data[0] : res.data
   } catch {
     notification.error({ message: 'Failed to load ranks' })
   } finally {
     loadingRanks.value = false
   }
 }
-
 
 const fetchBranches = async () => {
   loadingBranches.value = true
@@ -259,6 +258,7 @@ const fetchBranches = async () => {
 }
 
 const handleClose = () => {
+  emit('update:open', false)
   emit('close')
 }
 
@@ -307,6 +307,7 @@ const submit = async () => {
     })
 
     emit('created')
+    emit('update:open', false)
     emit('close')
   } catch (err: any) {
     const serverMessage = err.response?.data?.message
