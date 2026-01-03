@@ -17,85 +17,16 @@
       <div class="p-6 border-b border-slate-200 bg-slate-50">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-2xl font-semibold text-slate-800">Pending Requests</h2>
-          <a-button type="primary" @click="togglePendingFilters">
-            <FilterOutlined class="mr-2" />
-            {{ pendingCollapseKey.length ? 'Hide Filters' : 'Show Filters' }}
-          </a-button>
+
+         
         </div>
 
-        <!-- Filter Card (Collapsible) -->
-        <a-collapse v-model:activeKey="pendingCollapseKey" class="mb-6">
-          <a-collapse-panel key="1" header="" :show-arrow="false">
-            <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-md">
-              <h3 class="text-lg font-semibold text-slate-800 mb-4">Filter Options</h3>
-              <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-2">Employee</label>
-                  <a-select
-                    v-model:value="pendingFilters.employee"
-                    placeholder="All employees"
-                    :options="employeeOptions"
-                    show-search
-                    option-filter-prop="label"
-                    allow-clear
-                    class="w-full"
-                    @change="applyFiltersAutomatically"
-                  />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-2">Department</label>
-                  <a-select
-                    v-model:value="pendingFilters.department"
-                    placeholder="All departments"
-                    :options="departmentOptions"
-                    allow-clear
-                    class="w-full"
-                    @change="applyFiltersAutomatically"
-                  />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-2">Month</label>
-                  <a-select
-                    v-model:value="pendingFilters.month"
-                    placeholder="All"
-                    allow-clear
-                    class="w-full"
-                    @change="applyFiltersAutomatically"
-                  >
-                    <a-select-option :value="null">All</a-select-option>
-                    <a-select-option v-for="m in 12" :key="m" :value="m">
-                      {{ monthName(m) }}
-                    </a-select-option>
-                  </a-select>
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-2">Year</label>
-                  <a-select
-                    v-model:value="pendingFilters.year"
-                    placeholder="All"
-                    allow-clear
-                    class="w-full"
-                    @change="applyFiltersAutomatically"
-                  >
-                    <a-select-option :value="null">All</a-select-option>
-                    <a-select-option v-for="y in years" :key="y" :value="y">{{ y }}</a-select-option>
-                  </a-select>
-                </div>
-              </div>
-              <div class="mt-6 flex justify-end">
-                <a-button @click="resetPendingFilters">Reset Filters</a-button>
-              </div>
-            </div>
-          </a-collapse-panel>
-        </a-collapse>
-
-        <!-- Refresh + Export Buttons (always visible) -->
-        <div class="flex justify-end gap-3 mt-6">
+        <!-- Refresh + Export Buttons -->
+        <div class="flex justify-end gap-3">
           <a-button type="default" @click="fetchLeaves" :loading="loading">
             <ReloadOutlined class="mr-2" />
             Refresh
           </a-button>
-
           <a-button
             v-if="filteredPendingLeaves.length"
             type="primary"
@@ -113,6 +44,72 @@
           >
             Export Excel
           </a-button>
+           <!-- Filter Dropdown -->
+          <a-dropdown :trigger="['click']" v-model:open="pendingFilterOpen">
+            <a-button type="primary">
+              <FilterOutlined class="mr-2" />
+              Filters
+              <DownOutlined class="ml-2" />
+            </a-button>
+            <template #overlay>
+              <div class="bg-white rounded-xl shadow-2xl border border-slate-200 p-6 w-full max-w-4xl">
+                <h3 class="text-lg font-semibold text-slate-800 mb-5">Filter Pending Requests</h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Employee</label>
+                    <a-select
+                      v-model:value="pendingFilters.employee"
+                      placeholder="All employees"
+                      :options="employeeOptions"
+                      show-search
+                      option-filter-prop="label"
+                      allow-clear
+                      class="w-full"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Department</label>
+                    <a-select
+                      v-model:value="pendingFilters.department"
+                      placeholder="All departments"
+                      :options="departmentOptions"
+                      allow-clear
+                      class="w-full"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Month</label>
+                    <a-select
+                      v-model:value="pendingFilters.month"
+                      placeholder="All"
+                      allow-clear
+                      class="w-full"
+                    >
+                      <a-select-option :value="null">All</a-select-option>
+                      <a-select-option v-for="(name, index) in monthNames" :key="index + 1" :value="index + 1">
+                        {{ name }}
+                      </a-select-option>
+                    </a-select>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Year</label>
+                    <a-select
+                      v-model:value="pendingFilters.year"
+                      placeholder="All"
+                      allow-clear
+                      class="w-full"
+                    >
+                      <a-select-option :value="null">All</a-select-option>
+                      <a-select-option v-for="y in years" :key="y" :value="y">{{ y }}</a-select-option>
+                    </a-select>
+                  </div>
+                </div>
+                <div class="mt-6 flex justify-end">
+                  <a-button @click="resetPendingFilters">Reset Filters</a-button>
+                </div>
+              </div>
+            </template>
+          </a-dropdown>
         </div>
       </div>
 
@@ -185,83 +182,15 @@
       <div class="p-6 border-b border-slate-200 bg-slate-50">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-2xl font-semibold text-slate-800">History (Approved & Rejected)</h2>
-          <a-button type="primary" @click="toggleHistoryFilters">
-            <FilterOutlined class="mr-2" />
-            {{ historyCollapseKey.length ? 'Hide Filters' : 'Show Filters' }}
-          </a-button>
+
+         
         </div>
 
-        <a-collapse v-model:activeKey="historyCollapseKey" class="mb-6">
-          <a-collapse-panel key="1" header="" :show-arrow="false">
-            <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-md">
-              <h3 class="text-lg font-semibold text-slate-800 mb-4">Filter Options</h3>
-              <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-2">Employee</label>
-                  <a-select
-                    v-model:value="historyFilters.employee"
-                    placeholder="All employees"
-                    :options="employeeOptions"
-                    show-search
-                    option-filter-prop="label"
-                    allow-clear
-                    class="w-full"
-                    @change="applyFiltersAutomatically"
-                  />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-2">Department</label>
-                  <a-select
-                    v-model:value="historyFilters.department"
-                    placeholder="All departments"
-                    :options="departmentOptions"
-                    allow-clear
-                    class="w-full"
-                    @change="applyFiltersAutomatically"
-                  />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-2">Month</label>
-                  <a-select
-                    v-model:value="historyFilters.month"
-                    placeholder="All"
-                    allow-clear
-                    class="w-full"
-                    @change="applyFiltersAutomatically"
-                  >
-                    <a-select-option :value="null">All</a-select-option>
-                    <a-select-option v-for="m in 12" :key="m" :value="m">
-                      {{ monthName(m) }}
-                    </a-select-option>
-                  </a-select>
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-2">Year</label>
-                  <a-select
-                    v-model:value="historyFilters.year"
-                    placeholder="All"
-                    allow-clear
-                    class="w-full"
-                    @change="applyFiltersAutomatically"
-                  >
-                    <a-select-option :value="null">All</a-select-option>
-                    <a-select-option v-for="y in years" :key="y" :value="y">{{ y }}</a-select-option>
-                  </a-select>
-                </div>
-              </div>
-              <div class="mt-6 flex justify-end">
-                <a-button @click="resetHistoryFilters">Reset Filters</a-button>
-              </div>
-            </div>
-          </a-collapse-panel>
-        </a-collapse>
-
-        <div class="flex justify-end gap-3 mt-6">
+        <div class="flex justify-end gap-3">
           <a-button type="default" @click="fetchLeaves" :loading="loading">
             <ReloadOutlined class="mr-2" />
             Refresh
           </a-button>
-
           <a-button
             v-if="filteredHistoryLeaves.length"
             type="primary"
@@ -279,6 +208,72 @@
           >
             Export Excel
           </a-button>
+           <!-- History Filter Dropdown -->
+          <a-dropdown :trigger="['click']" v-model:open="historyFilterOpen">
+            <a-button type="primary">
+              <FilterOutlined class="mr-2" />
+              Filters
+              <DownOutlined class="ml-2" />
+            </a-button>
+            <template #overlay>
+              <div class="bg-white rounded-xl shadow-2xl border border-slate-200 p-6 w-full max-w-4xl">
+                <h3 class="text-lg font-semibold text-slate-800 mb-5">Filter History</h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Employee</label>
+                    <a-select
+                      v-model:value="historyFilters.employee"
+                      placeholder="All employees"
+                      :options="employeeOptions"
+                      show-search
+                      option-filter-prop="label"
+                      allow-clear
+                      class="w-full"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Department</label>
+                    <a-select
+                      v-model:value="historyFilters.department"
+                      placeholder="All departments"
+                      :options="departmentOptions"
+                      allow-clear
+                      class="w-full"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Month</label>
+                    <a-select
+                      v-model:value="historyFilters.month"
+                      placeholder="All"
+                      allow-clear
+                      class="w-full"
+                    >
+                      <a-select-option :value="null">All</a-select-option>
+                      <a-select-option v-for="(name, index) in monthNames" :key="index + 1" :value="index + 1">
+                        {{ name }}
+                      </a-select-option>
+                    </a-select>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Year</label>
+                    <a-select
+                      v-model:value="historyFilters.year"
+                      placeholder="All"
+                      allow-clear
+                      class="w-full"
+                    >
+                      <a-select-option :value="null">All</a-select-option>
+                      <a-select-option v-for="y in years" :key="y" :value="y">{{ y }}</a-select-option>
+                    </a-select>
+                  </div>
+                </div>
+                <div class="mt-6 flex justify-end">
+                  <a-button @click="resetHistoryFilters">Reset Filters</a-button>
+                </div>
+              </div>
+            </template>
+          </a-dropdown>
         </div>
       </div>
 
@@ -345,6 +340,7 @@
       width="640px"
       :ok-button-props="okButtonProps"
     >
+      <!-- Modal content same as before -->
       <div class="space-y-7 py-4">
         <div class="flex items-center gap-5">
           <a-avatar
@@ -423,6 +419,7 @@ import {
   CloseCircleOutlined,
   FilterOutlined,
   ReloadOutlined,
+  DownOutlined,
 } from '@ant-design/icons-vue'
 
 const userStore = useUserStore()
@@ -432,19 +429,12 @@ const allLeaves = ref<any[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
 
+// Filter dropdown visibility
+const pendingFilterOpen = ref(false)
+const historyFilterOpen = ref(false)
+
 const pendingFilters = reactive({ employee: null, department: null, month: null as number | null, year: null as number | null })
 const historyFilters = reactive({ employee: null, department: null, month: null as number | null, year: null as number | null })
-
-// Collapse state
-const pendingCollapseKey = ref<string[]>([])
-const historyCollapseKey = ref<string[]>([])
-
-const togglePendingFilters = () => {
-  pendingCollapseKey.value = pendingCollapseKey.value.length ? [] : ['1']
-}
-const toggleHistoryFilters = () => {
-  historyCollapseKey.value = historyCollapseKey.value.length ? [] : ['1']
-}
 
 const employeeOptions = ref<any[]>([])
 const departmentOptions = ref<any[]>([])
@@ -457,9 +447,7 @@ const exportingHistoryExcel = ref(false)
 const currentYear = dayjs().year()
 const years = Array.from({ length: 6 }, (_, i) => currentYear - i)
 
-const monthName = (m: number): string => {
-  return dayjs().month(m - 1).format('MMMM')
-}
+const monthNames = computed(() => Array.from({ length: 12 }, (_, i) => dayjs().month(i).format('MMMM')))
 
 const filteredPendingLeaves = computed(() => {
   return allLeaves.value
@@ -560,15 +548,12 @@ const fetchFilterOptions = async () => {
   }
 }
 
-const applyFiltersAutomatically = () => {
-  // Computed properties update automatically
-}
-
 const resetPendingFilters = () => {
   pendingFilters.employee = null
   pendingFilters.department = null
   pendingFilters.month = null
   pendingFilters.year = null
+  pendingFilterOpen.value = false
 }
 
 const resetHistoryFilters = () => {
@@ -576,6 +561,7 @@ const resetHistoryFilters = () => {
   historyFilters.department = null
   historyFilters.month = null
   historyFilters.year = null
+  historyFilterOpen.value = false
 }
 
 const exportFile = async (type: 'pending' | 'history', format: 'pdf' | 'excel', filters: any, loadingRef: any) => {
