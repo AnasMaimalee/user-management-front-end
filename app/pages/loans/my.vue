@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-slate-50">
-    <div class="max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+    <div class="w-full px-4 sm:px-6 lg:px-8 py-12">
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-8 gap-6">
         <div>
